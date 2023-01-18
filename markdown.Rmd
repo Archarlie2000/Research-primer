@@ -1,0 +1,40 @@
+---
+title: "CASE STUDY TITLE"
+author: "YOUR NAME"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+output:
+  html_document:  
+    keep_md: true
+    toc: true
+    toc_float: true
+    code_folding: hide
+    fig_height: 6
+    fig_width: 12
+    fig_align: 'center'
+---
+
+```{r, echo=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+## Set up
+Run this for the first time installation
+
+if (!requireNamespace("BiocManager", quietly = TRUE))
+  install.packages("BiocManager")
+BiocManager::install("biomaRt")
+
+```{r load_libraries, include=FALSE}
+
+
+library(tidyverse)
+library(biomaRt)
+library(tidyverse)
+library(stringr)
+library(sys)
+library(TmCalculator)
+library(biomaRt)
+
+
+```
+
