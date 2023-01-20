@@ -1,6 +1,10 @@
 library(tidyverse)
 library(TmCalculator)
 library(openPrimeR)
+library(rmelting)
+library(BiocManager)
+
+BiocManager::install("rmelting")
 
 # need to read in the primer3 output file with potential primers
 primers <- read.delim("output.txt", sep= '=', header = FALSE)
@@ -11,8 +15,16 @@ primers <- read.delim("output.txt", sep= '=', header = FALSE)
 # I only want the sequence of the left primer and the possible right primers
 primersFiltered <- primers[primers$V1 %in% c('SEQUENCE_ID', 'SEQUENCE_PRIMER', 'PRIMER_RIGHT_0_SEQUENCE'), ]
 
-testPrimer <- primersFiltered[3,2]
-Tm_NN(testPrimer, Na = 50, saltcorr = "SantaLucia1998-1")
+
+testframe = data.frame(cola = c(primersFiltered[6,2], primersFiltered[2,2]))
+
+testPrimer <- primersFiltered[6,2]
+
+Tm_NN(ntseq = testframe$cola, Na = 50, saltcorr = "SantaLucia1998-1")
+Tm_NN(ntseq = primersFiltered[2,2], Na = 50, saltcorr = "SantaLucia1998-1")
+
+
+
 
 # the primers data frame has a column for the attributes and a column for the values,
 # with a row for each attribute
