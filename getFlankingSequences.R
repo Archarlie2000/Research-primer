@@ -1,9 +1,17 @@
+if (!requireNamespace("BiocManager", quietly = TRUE))
+  install.packages("BiocManager")
+
+BiocManager::install("biomaRt")
+biocLite(c("XML","biomaRt"))
+
+library(biomaRt)
 library(biomatr)
 library(tidyverse)
 library(stringr)
 library(sys)
 library(TmCalculator)
-
+library(stringi)
+library(BiocInstaller)
 
 # list of snps we want information from
 # would be good to read this in from a file in the future
