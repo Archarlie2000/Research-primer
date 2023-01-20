@@ -1,10 +1,9 @@
 library(tidyverse)
 library(TmCalculator)
 library(openPrimeR)
-library(rmelting)
 library(BiocManager)
-
-BiocManager::install("rmelting")
+library(plyr)
+library(qpcR)
 
 # need to read in the primer3 output file with potential primers
 primers <- read.delim("output.txt", sep= '=', header = FALSE)
@@ -15,15 +14,27 @@ primers <- read.delim("output.txt", sep= '=', header = FALSE)
 # I only want the sequence of the left primer and the possible right primers
 primersFiltered <- primers[primers$V1 %in% c('SEQUENCE_ID', 'SEQUENCE_PRIMER', 'PRIMER_RIGHT_0_SEQUENCE'), ]
 
+getname <- data.frame(name = primersFiltered$V2[primersFiltered$V1 == "SEQUENCE_ID"])
+getseq1 <- data.frame(seq1 = primersFiltered$V2[primersFiltered$V1 == "SEQUENCE_PRIMER"])
+getseq2 <- data.frame(seq2 = primersFiltered$V2[primersFiltered$V1 == "PRIMER_RIGHT_0_SEQUENCE"])
 
-testframe = data.frame(cola = c(primersFiltered[6,2], primersFiltered[2,2]))
+getTM <- qpcR:::cbind.na(list(getname$name), list(getseq1$seq1), list(getseq2$seq2), list(), list())  
 
-testPrimer <- primersFiltered[6,2]
+for (i in 1:nrow(getTM)){
+  if (!is.na(getTM[i,3])){
+  a <- Tm_NN(as.character(getTM[i,3]), Na = 50, saltcorr = "SantaLucia1998-1")
+  getTM[i, 4] <- round(a$Tm, 2)
+  }
+}
 
-Tm_NN(ntseq = testframe$cola, Na = 50, saltcorr = "SantaLucia1998-1")
-Tm_NN(ntseq = primersFiltered[2,2], Na = 50, saltcorr = "SantaLucia1998-1")
 
+colnames(getTM) <- c("name", "seq", "seq2", "Tm", "Dup")
+class(getTM)
+getTM$array
 
+getTM$dup <- c(duplicated(getTM$Tm, fromLast = TRUE)  | duplicated(getTM$Tm))
+
+duplicated(getTM$Tm)
 
 
 # the primers data frame has a column for the attributes and a column for the values,
