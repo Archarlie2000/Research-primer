@@ -8,6 +8,7 @@ library(ggplot2)
 library(stringi)
 
 
+
 # need to read in the primer3 output file with potential primers
 primers <- read.delim("output.txt", sep= '=', header = FALSE)
 
@@ -21,6 +22,7 @@ primersFiltered <- primers[primers$V1 %in% c('SEQUENCE_ID',
                                              'PRIMER_RIGHT_0_GC_PERCENT',
                                              'PRIMER_RIGHT_0_END_STABILITY',
                                              'PRIMER_RIGHT_0_TM')]
+
 
 #Recontructing the dataframe for Tm extraction
 getname <- data.frame(name = primersFiltered$V2[primersFiltered$V1 == "SEQUENCE_ID"])
@@ -69,3 +71,70 @@ getTMFiltered <- filter(getTM,  diff < 2)
 # PRIMER_RIGHT_N_HAIRPIN_TH
 # PRIMER_RIGHT_N_END_STABILITY
 
+
+outputframe <- qpcR:::cbind.na(getTMFiltered$name, getTMFiltered$forward, getTMFiltered$reverse, 
+                         c("Na"), c("Na"), c("Na"), c("Na"))  
+
+
+colnames(outputframe) <- c("name", "forward", "reverse", "k1", "k2", "k3", "k4")
+
+reverse_chars <- function(string)
+{
+  # split string by characters
+  string_split = strsplit(string, split = "")
+  # reverse order
+  rev_order = nchar(string):1
+  # reversed characters
+  reversed_chars = string_split[[1]][rev_order]
+  # collapse reversed characters
+  paste(reversed_chars, collapse = "")
+} 
+
+
+
+
+
+
+outputframe <- data.frame(matrix(ncol = 5, nrow = 420))
+colnames(outputframe) <- c("name", "forward", "reverse", "k1", "k2")
+
+
+
+
+k <- 0
+for (i in 1:nrow(getTMFiltered)){
+  for (j in 1:nrow(getTMFiltered)){
+    k <- j+(i-1)*nrow(getTMFiltered)
+    outputframe[k,1] <- getTMFiltered[i,1]
+    outputframe[k,2] <- getTMFiltered[i,2]
+    outputframe[k,3] <- getTMFiltered[j,3]
+  }
+}
+
+
+
+for (i in 1:nrow(outputframe)){
+  print(i)
+  outputframe[i,4] <- complement(outputframe[i,3])
+  outputframe[i,4] <- reverse_chars(outputframe[i,4])
+  outputframe[i,5] <- gsub(" ", "", paste(outputframe[i,2], outputframe[i,3], sep = ""))
+}
+
+firstLine <- paste("SEQUENCE_ID=", outputframe$name, sep = "")
+secondLine <- paste("SEQUENCE_TEMPLATE=", outputframe$k2, sep = "")
+thirdLine <- paste("SEQUENCE_PRIMER=", outputframe$forward, sep  = "")
+fourthLine <- paste("SEQUENCE_PRIMER_REVCOMP=", outputframe$k1, sep  = "")
+otherLines <- "PRIMER_TASK=generic
+PRIMER_PICK_LEFT_PRIMER=0
+PRIMER_PICK_RIGHT_PRIMER=0
+PRIMER_OPT_SIZE=21
+PRIMER_MIN_SIZE=15
+PRIMER_MAX_SIZE=30
+PRIMER_PRODUCT_SIZE_RANGE=50-500
+PRIMER_EXPLAIN_FLAG=1
+PRIMER_THERMODYNAMIC_OLIGO_ALIGNMENT=1
+="
+
+finalOutput <- paste(firstLine, secondLine, thirdLine, fourthLine, otherLines, sep = "\n")
+
+write(finalOutput, "input22.txt")
