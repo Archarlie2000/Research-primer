@@ -108,7 +108,7 @@ variantsTrimmed2 <- pivot_longer(variantsTrimmed,
                                      values_to = "leftPrimers")
 
 # calculate the Tm for the primers we will be specifying
-#testPrimer <- primersFiltered[3,2]
+
 Tm_NN(testPrimer, Na = 50, saltcorr = "SantaLucia1998-1")
 
 
