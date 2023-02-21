@@ -44,7 +44,6 @@ for (i in 1:nrow(getTM)){
   b <- Tm_NN(as.character(getTM[i,2]), Na = 50, saltcorr = "SantaLucia1998-1")
   getTM[i, 5] <- round(a$Tm, 2)
   getTM[i, 4] <- round(b$Tm, 2)
-  
   }
 }
 
@@ -131,3 +130,5 @@ PRIMER_THERMODYNAMIC_OLIGO_ALIGNMENT=1
 finalOutput <- paste(firstLine, secondLine, thirdLine, fourthLine, otherLines, sep = "\n")
 
 write(finalOutput, "input317.txt")
+
+write.csv(getTMFiltered, "Master_primer_list.txt")
