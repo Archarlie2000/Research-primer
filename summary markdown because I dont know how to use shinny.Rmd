@@ -1,0 +1,293 @@
+---
+title: "Primer Selection"
+author: "Archarlie"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+output:
+  html_document:  
+    keep_md: true
+    toc: FALSE
+    toc_float: true
+    code_folding: hide
+    fig_height: 6
+    fig_width: 12
+    fig_align: 'center'
+---
+
+```{r, echo=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+
+```{r message=FALSE, warning=FALSE, paged.print=FALSE}
+library(tidyverse)
+library(readr)
+library(mosaic)
+library(DT)
+library(pander)
+library(car)
+library(ggplot2)
+library(dplyr)
+library(scales)
+library(haven)
+library(readxl)
+library(downloader)
+library(rio)
+library(stringi)
+library(viridis)
+library(hrbrthemes)
+library(ggridges)
+library(lubridate)
+library(riem)
+library(hexbin)
+library(RColorBrewer)
+library(tidyquant)
+library(quantmod)
+library(dygraphs)
+library(knitr)
+library(tidyverse)
+library(TmCalculator)
+library(openPrimeR)
+library(BiocManager)
+library(plyr)
+library(qpcR)
+library(ggplot2)
+library(stringi)
+library(reticulate)
+```
+
+#  {.tabset .tabset-pills}
+
+
+## Falnking (140)
+
+
+
+### Original set of primers (130)
+
+Gens mutation at the position are selected - "rs25", "rs16944", "rs1884", "rs17287498". Upstream sequence of 18 ~ 30 and the reverse primers are generated through primer3. 
+
+```{r}
+
+df <- read.csv("geenralprimerset.csv")[-c(1)]
+
+
+DT::datatable(df)
+
+```
+
+## Mismacthing (72)
+
+
+
+### Original set of mismatching primers (390)
+
+A set of rules are applied to creat mismatches at the third position away from the gen mutation
+
+```{r}
+
+df <- read.csv("geenralprimerset.csv")
+df <- df[c(2,3,4)]
+
+####### creat mismatches functions
+
+get_strong1 <- function(x){
+  target <- str_sub(x , - 3, - 3) 
+  target <- complement(target)
+  
+  if (target == "A") {temp <- "G"} else
+    if (target == "G") {temp <- "A"} else
+      if (target == "C") {temp <- "T"} else
+        if (target == "T") {temp <- "C"}
+  substring(x, nchar(x) - 2, nchar(x) - 2) <- temp
+  return(x)
+}
+
+## Mismatching on Ts
+get_strong2 <- function(x){
+  target <- str_sub(x , - 3, - 3) 
+  target <- complement(target)
+  
+  if (target == "T") {
+    temp <- "T"
+    substring(x, nchar(x) - 2, nchar(x) - 2) <- temp
+    return(x)}
+  else
+    return(NULL)
+}
+
+
+get_medium1 <- function(x){
+  target <- str_sub(x , - 3, - 3) 
+  target <- complement(target)
+  
+  if (target == "A") {temp <- "A"} else
+    if (target == "G") {temp <- "G"} else
+      if (target == "C") {temp <- "C"} else
+        return(NULL)
+  
+  substring(x, nchar(x) - 2, nchar(x) - 2) <- temp
+  return(x)
+}
+
+get_weak1 <- function(x){
+  target <- str_sub(x , - 3, - 3) 
+  target <- complement(target)
+  
+  if (target == "C") {temp <- "A"} else
+    if (target == "A") {temp <- "C"} else
+      if (target == "G") {temp <- "T"} else
+        if (target == "T") {temp <- "G"}
+  substring(x, nchar(x) - 2, nchar(x) - 2) <- temp
+  return(x)
+}
+
+# populate all the possible primers
+mismatch_list <- df %>% 
+  mutate(strong_mismatch_1 = map(forward, get_strong1),
+         strong_mismatch_2 = map(forward, get_strong2),
+         Medium_mismatch = map(forward, get_medium1),
+         Weak_mismatch = map(forward, get_weak1))
+
+
+Primer3_output <- mismatch_list[c(1,4,5,6,7,3)]
+
+title <- rbind(cbind(paste(Primer3_output$name, "-","strong_mismatch_1")),
+               cbind(paste(Primer3_output$name, "-","strong_mismatch_2")),
+               cbind(paste(Primer3_output$name, "-","Medium_mismatch")),
+               cbind(paste(Primer3_output$name, "-","Weak_mismatch")))
+
+
+primers <- rbind(cbind(Primer3_output$strong_mismatch_1),
+                 cbind(Primer3_output$strong_mismatch_2),
+                 cbind(Primer3_output$Medium_mismatch),
+                 cbind(Primer3_output$Weak_mismatch))
+
+reverse <- rbind(cbind(mismatch_list$reverse),
+                 cbind(mismatch_list$reverse),
+                 cbind(mismatch_list$reverse),
+                 cbind(mismatch_list$reverse))
+
+Primer3_output <- cbind(title, primers, reverse)
+colnames(Primer3_output) <- c("name", "forward", "reverse")
+Primer3_output <- as.data.frame(Primer3_output) %>% 
+  drop_na()
+
+
+```
+
+
+```{r}
+## Make revers compliment
+
+outputframe <- cbind(Primer3_output, "", "", "")
+
+colnames(outputframe) <- c("name", "forward", "reverse", "revcom", "template", "name2")
+
+reverse_chars <- function(string)
+{
+  # split string by characters
+  string_split = strsplit(string, split = "")
+  # reverse order
+  rev_order = nchar(string):1
+  # reversed characters
+  reversed_chars = string_split[[1]][rev_order]
+  # collapse reversed characters
+  paste(reversed_chars, collapse = "")
+} 
+
+dymmy <- "AGCTAGCTAGCTAGCTAGCTAGCTAGCTAGCTAGCTAGCTAGCTAGCTAGCTAGCTAGCTAGCTAG"
+
+
+# Put name, template, reverse of complementary of reverse together
+for (i in 1:nrow(outputframe)){
+  outputframe[i,4] <- complement(unlist(outputframe[i,3]))
+  outputframe[i,4] <- reverse_chars(unlist(outputframe[i,4]))
+  outputframe[i,5] <- gsub(" ", "", paste(unlist(outputframe[i,2]), dymmy,
+                                          unlist(outputframe[i,4]), sep = ""))
+                           
+}
+
+outputframe <- outputframe[-c(6)]
+
+#Enter output data frame into an input file for primer3
+firstLine <- paste("SEQUENCE_ID=", outputframe$name, sep = "")
+secondLine <- paste("SEQUENCE_TEMPLATE=", outputframe$template, sep = "")
+thirdLine <- paste("SEQUENCE_PRIMER=", outputframe$forward, sep  = "")
+fourthLine <- paste("SEQUENCE_PRIMER_REVCOMP=", outputframe$reverse, sep  = "")
+otherLines <- "PRIMER_TASK=generic
+PRIMER_OPT_SIZE=21
+PRIMER_MIN_SIZE=15
+PRIMER_MAX_SIZE=30
+PRIMER_PRODUCT_SIZE_RANGE=30-500
+PRIMER_EXPLAIN_FLAG=1
+PRIMER_THERMODYNAMIC_OLIGO_ALIGNMENT=1
+="
+
+finalOutput <- paste(firstLine, secondLine, thirdLine, fourthLine, otherLines, sep = "\n")
+
+write(finalOutput, "input0311_2.txt")
+
+```
+
+
+```{r message=FALSE, warning=FALSE}
+primers <- read.delim("output311_2.txt", sep= '=', header = FALSE)
+
+
+mismatch_filtered <- cbind(primers$V2[primers$V1 == "SEQUENCE_ID"], 
+                  primers$V2[primers$V1 == "SEQUENCE_PRIMER"],
+                  primers$V2[primers$V1 == "PRIMER_LEFT_0_HAIRPIN_TH"],
+                  primers$V2[primers$V1 == "PRIMER_LEFT_0_END_STABILITY"],
+                  primers$V2[primers$V1 == "PRIMER_RIGHT_0_END_STABILITY"],
+                  primers$V2[primers$V1 == "PRIMER_LEFT_0_TM"],
+                  primers$V2[primers$V1 == "PRIMER_RIGHT_0_TM"])
+
+colnames(mismatch_filtered) <- c("ID", 
+                        "LEFT_PRIMER", 
+                        "HAIRPIN", 
+                        "LEFT_STABILITY", 
+                        "RIGHT_STABILITY", 
+                        "LEFT_TM",
+                        "RIGHT_TM")
+
+mismatch_filtered <- as.data.frame(mismatch_filtered)
+
+DT::datatable(mismatch_filtered)
+```
+
+### Mismatching primers with Filtering (72)
+
+The filtering used are 1) TM_diff < 3 2) hairpin_stability = 0 3) both primers stability > 4.
+
+```{r}
+mismatch_filtered_real <- mismatch_filtered %>% 
+  mutate(TM_diff = abs(as.numeric(LEFT_TM) - as.numeric(RIGHT_TM))) %>%
+  filter(TM_diff < 3) %>%
+  filter(as.numeric(HAIRPIN) < 12 &
+           as.numeric(LEFT_STABILITY) > 3 &
+           as.numeric(RIGHT_STABILITY) > 3) 
+
+
+mismatch_filtered_real <- mismatch_filtered_real[-c(3,6,7)]
+
+DT::datatable(mismatch_filtered_real)
+
+```
+
+
+## selection
+
+asdasd
+
+
+
+## Code
+
+
+
+
+
+```{r}
+
+
+```
