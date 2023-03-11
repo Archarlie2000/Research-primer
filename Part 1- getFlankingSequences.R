@@ -81,8 +81,8 @@ variantsTrimmed <- drop_na(variantsTibbleFinal2)
 # we want one string that is the upstream sequence, then the observation of the snp
 # then the downstream sequence all together in one string
 variantsTrimmed <- variantsTrimmed %>% relocate(snpID)
-variantsTrimmed <- variantsTrimmed %>% relocate(observations, .before = variants)
-variantsTrimmed <- variantsTrimmed %>% relocate(downstream, .before = variants)
+variantsTrimmed <- variantsTrimmed %>% relocate(observations, .before = variations)
+variantsTrimmed <- variantsTrimmed %>% relocate(downstream, .before = variations)
 variantsTrimmed <- variantsTrimmed %>% unite("sequence", upstream:downstream, sep = "")
 
 
@@ -107,9 +107,7 @@ variantsTrimmed2 <- pivot_longer(variantsTrimmed,
                                      cols = left18:left30,
                                      values_to = "leftPrimers")
 
-# calculate the Tm for the primers we will be specifying
 
-Tm_NN(testPrimer, Na = 50, saltcorr = "SantaLucia1998-1")
 
 
 firstLine <- paste("SEQUENCE_ID=", variantsTrimmed2$snpID, variantsTrimmed2$name, sep = "")

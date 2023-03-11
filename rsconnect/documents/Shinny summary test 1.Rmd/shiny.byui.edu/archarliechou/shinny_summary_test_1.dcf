@@ -1,0 +1,13 @@
+name: shinny_summary_test_1
+title: Shinny summary test 1
+username: archarliechou
+account: archarliechou
+server: shiny.byui.edu
+hostUrl: https://shiny.byui.edu/__api__
+appId: 1956
+bundleId: 3962
+url: https://shiny.byui.edu/content/e7104501-5a5c-49b4-9169-b71ce42978cd/
+when: 1678545946.4727
+lastSyncTime: 1678545946.4727
+asMultiple: FALSE
+asStatic: FALSE

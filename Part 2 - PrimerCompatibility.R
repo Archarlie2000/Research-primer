@@ -37,6 +37,7 @@ getTM <- qpcR:::cbind.na(getname$name, getseq1$seq1, getseq2$seq2,
                          c("Na"), c("Na"), c("Na"), c("Na"))  
 
 
+
 # Tranpose TM into column
 for (i in 1:nrow(getTM)){
   if (!is.na(getTM[i,3])){

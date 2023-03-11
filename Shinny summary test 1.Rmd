@@ -1,0 +1,28 @@
+---
+title: "Untitled"
+author: "Me"
+date: "3/11/2023"
+output: html_document
+runtime: shiny
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+#  {.tabset .tabset-pills}
+
+
+## Inputs and Outputs
+
+asdasd
+
+## Table
+asd
+
+## selection
+
+asdasd
+
+
