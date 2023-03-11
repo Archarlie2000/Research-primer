@@ -5,7 +5,7 @@ date: "`r format(Sys.time(), '%B %d, %Y')`"
 output:
   html_document:  
     keep_md: true
-    toc: FALSE
+    toc: false
     toc_float: true
     code_folding: hide
     fig_height: 6
@@ -25,34 +25,16 @@ library(mosaic)
 library(DT)
 library(pander)
 library(car)
-library(ggplot2)
 library(dplyr)
-library(scales)
-library(haven)
-library(readxl)
-library(downloader)
-library(rio)
+
+
 library(stringi)
-library(viridis)
-library(hrbrthemes)
-library(ggridges)
-library(lubridate)
-library(riem)
-library(hexbin)
-library(RColorBrewer)
-library(tidyquant)
-library(quantmod)
-library(dygraphs)
+
 library(knitr)
-library(tidyverse)
 library(TmCalculator)
-library(openPrimeR)
-library(BiocManager)
-library(plyr)
-library(qpcR)
-library(ggplot2)
+
 library(stringi)
-library(reticulate)
+
 ```
 
 #  {.tabset .tabset-pills}
