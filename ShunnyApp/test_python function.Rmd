@@ -1,0 +1,40 @@
+---
+title: "CASE STUDY TITLE"
+author: "YOUR NAME"
+date: "`r format(Sys.time(), '%B %d, %Y')`"
+output:
+  html_document:  
+    keep_md: true
+    toc: true
+    toc_float: true
+    code_folding: hide
+    fig_height: 6
+    fig_width: 12
+    fig_align: 'center'
+---
+
+```{r, echo=FALSE}
+knitr::opts_chunk$set(echo = TRUE, message = FALSE, warning = FALSE)
+```
+
+```{r load_libraries, include=FALSE}
+# Use this R-Chunk to load all your libraries!
+#install.packages("tidyverse") # run this line once in console to get package
+library(tidyverse)
+library(reticulate)
+
+reticulate::py_install("numpy", pip_options="--no-binary='numpy'", ignore_installed=TRUE)
+```
+
+```{r load_data}
+
+source_python("getdata.py")
+
+
+source_python("test_func.py")
+
+
+
+```
+
+
