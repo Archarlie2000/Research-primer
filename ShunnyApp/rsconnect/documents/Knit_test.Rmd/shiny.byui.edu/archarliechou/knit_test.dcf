@@ -1,0 +1,13 @@
+name: knit_test
+title: Knit_test
+username: archarliechou
+account: archarliechou
+server: shiny.byui.edu
+hostUrl: https://shiny.byui.edu/__api__
+appId: 2106
+bundleId: 4230
+url: https://shiny.byui.edu/content/22484913-e047-4bd0-87a3-494a3b0ab9ef/
+when: 1681254723.96505
+lastSyncTime: 1681254723.96507
+asMultiple: FALSE
+asStatic: FALSE

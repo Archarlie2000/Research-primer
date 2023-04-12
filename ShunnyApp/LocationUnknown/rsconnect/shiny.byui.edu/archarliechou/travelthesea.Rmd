@@ -1,0 +1,125 @@
+---
+title: "Socially_speaking"
+author: "Me"
+date: "4/11/2023"
+output: html_document
+runtime: shiny
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+This R Markdown document is made interactive using Shiny. Unlike the more traditional workflow of creating static reports, you can now create documents that allow your readers to change the assumptions underlying your analysis and see the results immediately. 
+
+To learn more, see [Interactive Documents](http://rmarkdown.rstudio.com/authoring_shiny.html).
+
+## Inputs and Outputs
+
+You can embed Shiny inputs and outputs in your document. Outputs are automatically updated whenever inputs change.  This demonstrates how a standard R plot can be made interactive by wrapping it in the Shiny `renderPlot` function. The `selectInput` and `sliderInput` functions create the input widgets used to drive the plot.
+
+```{r message=FALSE, warning=FALSE}
+library(tidyverse)
+library(stringi)
+library(dplyr)
+library(tidyverse)
+library(BiocManager)
+library(TmCalculator)
+library(biomaRt)
+library(biomartr)
+library(spgs)
+library(reticulate)
+library(shiny)
+library(DT)
+library(knitr)
+library(shinydashboard)
+
+```
+
+
+
+```{r message=FALSE, warning=FALSE}
+
+dashboardPage(
+  dashboardHeader(title = "Primer Selection"),
+  dashboardSidebar(
+    sidebarMenu(
+      menuItem("Primer Selection", tabName = "primer_selection", icon = icon("th"))
+    )
+  ),
+  dashboardBody(
+    tabItems(
+      tabItem(
+        tabName = "primer_selection",
+        fluidRow(
+          column(
+            width = 3,
+            h4("Options"),
+            br(),
+            textInput(inputId = "primer_list", label = "Enter Primers", value = "rs25 rs16944 rs1884 rs17287498"),
+            br(),
+            numericInput(inputId = "primer_away", label = "Primer Distance (bp)", value = 50),
+            br(),
+            sliderInput("primer_right_length", label = h3("Reverse Primer length"), min = 10,
+                        max = 40, value = c(10, 15)),
+            br(),
+            sliderInput("primer_left_length", label = h3("Forward Primer length"), min = 18,
+                        max = 40, value = c(18, 20)),
+            br()
+          ),
+          column(
+            width = 9,
+            h4("Output"),
+            br(),
+            #tableOutput(outputId = "primer_table")
+            #textOutput(outputId = "primer_text")
+          )
+        )
+      )
+    )
+  )
+)
+
+```
+
+
+
+```{r eruptions, echo=FALSE}
+inputPanel(
+  selectInput("n_breaks", label = "Number of bins:",
+              choices = c(10, 20, 35, 50), selected = 20),
+  
+  sliderInput("bw_adjust", label = "Bandwidth adjustment:",
+              min = 0.2, max = 2, value = 1, step = 0.2)
+)
+
+renderPlot({
+  hist(faithful$eruptions, probability = TRUE, breaks = as.numeric(input$n_breaks),
+       xlab = "Duration (minutes)", main = "Geyser eruption duration")
+  
+  dens <- density(faithful$eruptions, adjust = input$bw_adjust)
+  lines(dens, col = "blue")
+})
+```
+
+## Embedded Application
+
+It's also possible to embed an entire Shiny application within an R Markdown document using the `shinyAppDir` function. This example embeds a Shiny application located in another directory:
+
+```{r tabsets, echo=FALSE}
+shinyAppDir(
+  system.file("examples/06_tabsets", package = "shiny"),
+  options = list(
+    width = "100%", height = 550
+  )
+)
+```
+
+Note the use of the `height` parameter to determine how much vertical space the embedded application should occupy.
+
+You can also use the `shinyApp` function to define an application inline rather then in an external directory.
+
+In all of R code chunks above the `echo = FALSE` attribute is used. This is to prevent the R code within the chunk from rendering in the document alongside the Shiny components.
+
+
+
