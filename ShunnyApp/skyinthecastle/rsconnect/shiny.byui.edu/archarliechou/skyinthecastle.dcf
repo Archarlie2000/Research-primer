@@ -5,9 +5,7 @@ account: archarliechou
 server: shiny.byui.edu
 hostUrl: https://shiny.byui.edu/__api__
 appId: 2108
-bundleId: 4251
+bundleId: 4260
 url: https://shiny.byui.edu/content/8fb1258a-8254-4e33-bb08-db4972c13858/
-when: 1681325403.87524
-lastSyncTime: 1681325403.87525
-asMultiple: FALSE
-asStatic: FALSE
+when: 1681363050.79963
+lastSyncTime: 1681363050.79964

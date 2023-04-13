@@ -1,65 +1,56 @@
-# 
-# 
-# install.packages('rsconnect')
 
-
-
+library(tidyverse)
 library(stringi)
 library(dplyr)
 library(tidyverse)
-
-library(biomaRt)
-library(spgs)
-
-library(reticulate)
-library(DT)
-
-library(rsconnect)
-library(shinydashboard)
-library(shiny)
-
-
 library(BiocManager)
-options(repos = BiocManager::repositories())
+library(TmCalculator)
+library(biomaRt)
+library(biomartr)
+library(spgs)
+library(reticulate)
+library(shiny)
+library(DT)
+library(knitr)
+library(shinydashboard)
 
 
-bioc <- local({
-  env <- new.env()
-  on.exit(rm(env))
-  evalq(source("http://bioconductor.org/biocLite.R", local = TRUE), env)
-  biocinstallRepos()
-})
-
-
-
-if (!require("BiocManager", quietly = TRUE))
-  install.packages("BiocManager")
-BiocManager::install(version = "3.16")
-
-ui <- fluidPage(
-  
-  # Application title
-  titlePanel("Old Faithful Geyser Data"),
-  
-  # Sidebar with a slider input for number of bins 
-  sidebarLayout(
-    sidebarPanel(
-      textInput(inputId = "primer_list", label = "Enter Primers", value = "rs25 rs16944 rs1884 rs17287498"),
-      br(),
-      numericInput(inputId = "primer_away", label = "Primer Distance (bp)", value = 476),
-      br(),
-      sliderInput("primer_right_length", label = h3("Reverse Primer length"), min = 10,
-                  max = 40, value = c(15, 17)),
-      br(),
-      sliderInput("primer_left_length", label = h3("Forward Primer length"), min = 15,
-                  max = 40, value = c(18, 18)),
-      br()
-    ),
-    
-    # Show a plot of the generated distribution
-    mainPanel(
-      tableOutput(outputId = "primer_table"),
-      #textOutput(outputId = "primer_text")
+ui <- dashboardPage(
+  dashboardHeader(title = "Primer Selection"),
+  dashboardSidebar(
+    sidebarMenu(
+      menuItem("Primer Selection", tabName = "primer_selection", icon = icon("th"))
+    )
+  ),
+  dashboardBody(
+    tabItems(
+      tabItem(
+        tabName = "primer_selection",
+        fluidRow(
+          column(
+            width = 3,
+            h4("Options"),
+            br(),
+            textInput(inputId = "primer_list", label = "Enter Primers", value = "rs25 rs16944 rs1884 rs17287498"),
+            br(),
+            numericInput(inputId = "primer_away", label = "Primer Distance (bp)", value = 50),
+            br(),
+            sliderInput("primer_right_length", label = h3("Reverse Primer length"), min = 10,
+                        max = 40, value = c(10, 15)),
+            br(),
+            sliderInput("primer_left_length", label = h3("Forward Primer length"), min = 18,
+                        max = 40, value = c(18, 20)),
+            br()
+          ),
+          column(
+            width = 9,
+            h4("Output"),
+            br(),
+            tableOutput(outputId = "primer_table")
+            #textOutput(outputId = "primer_text")
+          )
+        )
+      )
     )
   )
 )
@@ -229,13 +220,12 @@ server <- function(input, output) {
       dplyr::select(c(8, 7, 5)) %>%
       mutate(rightPrimers = toupper(reverseComplement(rightPrimers)))
     print("Check 2")
-
+    
     source_python("getdata.py")
     df <- getdata(mismatch_list)
-
+    
     return(df)
   }
-   
   beta_api <- function(primer,
                        primer_away,
                        primer_min,
@@ -249,7 +239,6 @@ server <- function(input, output) {
                  primer_left_min,
                  primer_left_max))
   }
-  
   output$primer_table <- renderTable(
     mart_api(input$primer_list,
              input$primer_away,
@@ -258,7 +247,6 @@ server <- function(input, output) {
              input$primer_left_length[1],
              input$primer_left_length[2])
   )
-  
   output$primer_text <- renderText(
     paste(input$primer_list,
           input$primer_away,
@@ -271,11 +259,3 @@ server <- function(input, output) {
 
 
 shinyApp(ui, server)
-
-
-
-# rsconnect::deployApp('C:/Users/Owner/Downloads/Research-primer/ShunnyApp/skyinthecastle')
-# 
-# rsconnect::setAccountInfo(name='vw8ids-archarlie-chou',
-#                           token='134A98489E53CDC5BCCCF23DA0CE3DEB',
-#                           secret='NnPy6oxfDuJq3I7E/6h3pvZxIzZhhqAHQL8jbMXY')
