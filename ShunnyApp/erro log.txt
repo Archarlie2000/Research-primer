@@ -1,0 +1,35 @@
+Full execution - fail
+remove all outputs - fail
+remove all function - fail
+remove biomanager, biomartr, biomaRT - work
+added biomanager - work
+same but with rsconnect - work
+added biomaRT with rsconnect -fail
+remove biomaRT with command - fail
+remove biomaRT manual command - fail
+remove biomanager auto rsconnect -fail
+
+
+start old gyser auto rsconnect - fail
+old gyser with manual rsconnect - work
+remove biomanager manual rsconnect - work
+added biomaRT manual rsconnect - work
+add all outputs without activating manual rsconnect - fail
+add repo dic for biomanager manual rsconnect - work
+show first psuo function - work
+Full execution - fail
+remove python - work
+call pyhton, but not using it - fail
+set dict with python - fail
+insert pring in python
+
+
+
+
+
+
+
+* publish locally to check
+* never use auto rsconnect
+* set biomanger repo
+* 

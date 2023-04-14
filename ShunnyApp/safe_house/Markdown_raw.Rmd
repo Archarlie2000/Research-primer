@@ -33,6 +33,9 @@ library(knitr)
 library(shinydashboard)
 library(rsconnect)
 
+options(repos = BiocManager::repositories())
+
+
 ```
 
 

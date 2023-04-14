@@ -1,28 +1,17 @@
-# 
-# 
-# install.packages('rsconnect')
 
+library(knitr)
+library(shinydashboard)
 
-
+library(tidyverse)
 library(stringi)
 library(dplyr)
-library(tidyverse)
-
-#library(biomaRt)
-library(spgs)
-
-library(reticulate)
 library(DT)
-
-library(rsconnect)
-library(shinydashboard)
 library(shiny)
+library(spgs)
+library(biomaRt)
+library(rsconnect)
 
-
-#library(BiocManager)
-#options(repos = BiocManager::repositories())
-
-
+options(repos = BiocManager::repositories())
 
 ui <- fluidPage(
   
@@ -34,20 +23,21 @@ ui <- fluidPage(
     sidebarPanel(
       textInput(inputId = "primer_list", label = "Enter Primers", value = "rs25 rs16944 rs1884 rs17287498"),
       br(),
-      numericInput(inputId = "primer_away", label = "Primer Distance (bp)", value = 476),
+      numericInput(inputId = "primer_away", label = "Primer Distance (bp)", value = 50),
       br(),
       sliderInput("primer_right_length", label = h3("Reverse Primer length"), min = 10,
-                  max = 40, value = c(15, 17)),
+                  max = 40, value = c(10, 15)),
       br(),
-      sliderInput("primer_left_length", label = h3("Forward Primer length"), min = 15,
-                  max = 40, value = c(18, 18)),
+      sliderInput("primer_left_length", label = h3("Forward Primer length"), min = 18,
+                  max = 40, value = c(18, 20)),
       br()
     ),
     
     # Show a plot of the generated distribution
     mainPanel(
-      #tableOutput(outputId = "primer_table"),
+      tableOutput(outputId = "primer_table"),
       textOutput(outputId = "primer_text")
+      
     )
   )
 )
@@ -217,13 +207,13 @@ server <- function(input, output) {
       dplyr::select(c(8, 7, 5)) %>%
       mutate(rightPrimers = toupper(reverseComplement(rightPrimers)))
     print("Check 2")
-
+    
     source_python("getdata.py")
-    df <- getdata(mismatch_list)
-
-    return(df)
+    #df <- getdata(mismatch_list)
+    
+    return(mismatch_list)
   }
-   
+  
   beta_api <- function(primer,
                        primer_away,
                        primer_min,
@@ -257,13 +247,6 @@ server <- function(input, output) {
   )
 }
 
-
 shinyApp(ui, server)
 
 
-
-rsconnect::deployApp('C:/Users/Owner/Downloads/Research-primer/ShunnyApp/skyinthecastle')
-
-rsconnect::setAccountInfo(name='vw8ids-archarlie-chou',
-                          token='134A98489E53CDC5BCCCF23DA0CE3DEB',
-                          secret='NnPy6oxfDuJq3I7E/6h3pvZxIzZhhqAHQL8jbMXY')
