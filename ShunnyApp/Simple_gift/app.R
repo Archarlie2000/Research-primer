@@ -253,6 +253,11 @@ server <- function(input, output) {
         dplyr::select(c(8, 7, 5)) %>%
         mutate(rightPrimers = toupper(reverseComplement(rightPrimers)))
       
+      source_python("simply_gift.py")
+      source_python("getdata.py")
+      
+      py_install("pandas")
+      py_install("primer3-py")
       
       df <- get_data(5)
 

@@ -33,3 +33,21 @@ insert pring in python
 * never use auto rsconnect
 * set biomanger repo
 * 
+
+--
+install github
+install R
+install python
+
+
+
+
+---- pyhotn library was an issue
+
+only py_install("primer3-py") - work
+import primer3
+
+
+
+what is wrong with the markdown?
+publish markdown with rs connect
