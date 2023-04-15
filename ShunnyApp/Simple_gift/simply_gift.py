@@ -1,7 +1,7 @@
-
-
+#import primer3
+  
 def get_gift(k):
-  import primer3
+
   print("reach the function")
 
   

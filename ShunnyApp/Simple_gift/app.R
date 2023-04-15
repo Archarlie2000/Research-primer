@@ -40,7 +40,7 @@ options(repos = BiocManager::repositories())
 
 
 
-
+PYTHON_DEPENDENCIES = c('pip','pandas', 'primer3')
 
 ui <- fluidPage(
   
@@ -81,6 +81,13 @@ ui <- fluidPage(
 # Define server logic required to draw a histogram
 server <- function(input, output) {
 
+  virtualenv_dir = Sys.getenv('VIRTUALENV_NAME')
+  python_path = Sys.getenv('PYTHON_PATH')
+  
+  # Create virtual env and install dependencies
+  reticulate::virtualenv_create(envname = virtualenv_dir, python = python_path)
+  reticulate::virtualenv_install(virtualenv_dir, packages = PYTHON_DEPENDENCIES, ignore_installed=TRUE)
+  reticulate::use_virtualenv(virtualenv_dir, required = T)  
   
   
     output$distPlot <- renderPlot({
@@ -256,8 +263,8 @@ server <- function(input, output) {
       source_python("simply_gift.py")
       source_python("getdata.py")
       
-      py_install("pandas")
-      py_install("primer3-py")
+      #py_install("pandas")
+      #py_install("primer3-py")
       
       df <- get_data(5)
 
