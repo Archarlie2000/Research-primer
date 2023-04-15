@@ -1,27 +1,40 @@
-#
-# This is a Shiny web application. You can run the application by clicking
-# the 'Run App' button above.
-#
-# Find out more about building applications with Shiny here:
-#
-#    http://shiny.rstudio.com/
-#
-
-library(reticulate)
-library(shiny)
-library(biomaRt)
 
 
-library(knitr)
-library(shinydashboard)
 
+# install.packages("reticulate")
+# install.packages("DT")
+# install.packages("shiny")
+# install.packages("spgs")
+# install.packages("rsconnect")
+# install.packages("dplyr")
+# install.packages("stringi")
+# install.packages("tidyverse")
+# install.packages("shinydashboard")
+# 
+# if (!require("BiocManager", quietly = TRUE))
+#   install.packages("BiocManager")
+# 
+# BiocManager::install("biomaRt")
+
+
+# Data processing
+library(DT)
+library(dplyr)
 library(tidyverse)
 library(stringi)
-library(dplyr)
-library(DT)
-library(shiny)
+
+# Bioinformatics
+library(biomaRt)
 library(spgs)
+
+
+# Deployment
+library(shinydashboard)
+library(reticulate)
+library(shiny)
 library(rsconnect)
+
+
 
 options(repos = BiocManager::repositories())
 
@@ -283,5 +296,13 @@ server <- function(input, output) {
 
 # Run the application 
 shinyApp(ui = ui, server = server)
+
+
+# rsconnect::setAccountInfo(name='vw8ids-archarlie-chou',
+#                           token='134A98489E53CDC5BCCCF23DA0CE3DEB',
+#                           secret='NnPy6oxfDuJq3I7E/6h3pvZxIzZhhqAHQL8jbMXY')
+# 
+
+# deployApp()
 
 
