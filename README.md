@@ -76,7 +76,7 @@ pip install pandas
 6. Homodimer - The entropy of this primer binds itself.
 7. GC contents - yap
 
-
+Step 4 - Restart the R session
 
 ## Contributing
 
