@@ -5,9 +5,13 @@ This dashboard select appropriate primers set for multiplexing of SNP DNA mutati
 ## References
 
 
-Python wrapper: 
+
+Python wrapper (Mainly about the data programming structure): 
 https://libnano.github.io/primer3-py/api/bindings.html#primer3.bindings.calc_heterodimer
 
+
+Primer3 manual (I use it to how it calculates the functions):
+https://primer3.org/manual.html#PRIMER_MAX_HAIRPIN_TH
 
 ## Adjustable Parameters
 
@@ -48,7 +52,7 @@ install.packages("tidyverse")
 install.packages("shinydashboard")
 ```
 
-Run this chunk separately (also included in the code (but I am not sure what will happen if run everything together all at once)
+Step 2 - Run this chunk separately (also included in the code (but I am not sure what will happen if run everything together all at once)
 
 ```bash
 if (!require("BiocManager", quietly = TRUE))
@@ -57,7 +61,7 @@ if (!require("BiocManager", quietly = TRUE))
 BiocManager::install("biomaRt")
 ```
 
-Step 2 - Go to the console in R studio and install the following libraries 
+Step 3 - Go to the console in R studio and install the following libraries 
 
 ```bash
 pip install primer3-py
@@ -67,8 +71,10 @@ pip install pandas
 1. Identification - Description about where and how this set of primer is produced
 2. Forward Primer - From 5' to 3'
 3. Forward Primer - From 3' to 5'
-4. Diff in TM - Difference between TMs
-5. Hairpin Melting temperature - 
+4. Hairpin TM - This is the most stable monomer structure of internal oligo calculated by thermodynamic approach. The hairpin loops, bulge loops, internal loops, internal single mismatches, dangling ends, terminal mismatches have been considered. This parameter is calculated only if PRIMER_THERMODYNAMIC_OLIGO_ALIGNMENT=1. The default value is 10 degrees lower than the default value of PRIMER_MIN_TM
+5. Heterodimer - The entropy of  this primer binds to another primer in the same set.
+6. Homodimer - The entropy of this primer binds itself.
+7. GC contents - yap
 
 
 
