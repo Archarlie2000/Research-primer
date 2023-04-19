@@ -8,19 +8,26 @@ This dashboard select appropriate primers set for multiplexing of SNP DNA mutati
 2. Mutation Downstream Length (bp)
 3. Distance Between Primers (bp)
 4. Forward Primer Length (bp)
-5. Reversed primer Length (bp)
-6. Filter - Maximum forward primer MT (c)
-7. Filter - Reverse forward primer MT (c)
-8. Filter - maximum Difference between TM (c)
+5. Reversed Primer Length (bp)
+6. Filter - Maximum Forward Primer MT (c)
+7. Filter - Reverse Forward Primer MT (c)
+8. Filter - Maximum Difference Between TMs (c)
+9. Filter - Minimum Homodimer delta G (Cal)
+10. Filter - Minimum Heterodimer delta G (Cal)
 
 
 
 ## Installation
 
+System Requirement:
+1. python 3.11 or above
+2. R 4.2.3 or above
+
 Use the package manager [pip](https://pip.pypa.io/en/stable/) to install foobar.
 
 ```bash
-pip install foobar
+pip install primer3-py
+pip install pandas
 ```
 
 ## Usage
