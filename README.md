@@ -16,32 +16,45 @@ https://libnano.github.io/primer3-py/api/bindings.html#primer3.bindings.calc_het
 3. Distance Between Primers (bp)
 4. Forward Primer Length (bp)
 5. Reversed Primer Length (bp)
-6. Filter - Maximum Forward Primer MT (c)
-7. Filter - Reverse Forward Primer MT (c)
-8. Filter - Maximum Difference Between TMs (c)
-9. Filter - Minimum Homodimer delta G (Cal)
-10. Filter - Minimum Heterodimer delta G (Cal)
+6. Maximum Forward Primer MT (c)
+7. Maximum Reverse Primer MT (c)
+6. Maximum Forward Primer Hairpin MT (c)
+7. Maximum Reverse Primer Hairpin MT (c)
+8. Maximum Difference Between TMs (c)
+9. Minimum Homodimer delta G (Cal)
+10. Minimum Heterodimer delta G (Cal)
 
 
 
 ## Installation
 
 System Requirement:
-1. python 3.11 or above
-2. R 4.2.3 or above
-3. The code does not use any virtual environment
-4. Previous installation of python is **not** required
+1. R 4.2.3 or above
+2. The code does not use any virtual environment
+3. Previous installation of python is **not** required
+4. **Do not use** minoconda since it is not compatible with shiny.io
 
-Step 1 - Install the following R packages. uncomment (crl + c) to run it in the document. Remeber to comment it back after you are done.
-
+Step 1 - Install the following R packages. uncomment (crl + shift + c) to run it in the document. Remeber to comment it back after you are done.
 
 ```bash
-
+install.packages("reticulate")
+install.packages("DT")
+install.packages("shiny")
+install.packages("spgs")
+install.packages("rsconnect")
+install.packages("dplyr")
+install.packages("stringi")
+install.packages("tidyverse")
+install.packages("shinydashboard")
 ```
 
+Run this chunk separately (also included in the code (but I am not sure what will happen if run everything together all at once)
 
 ```bash
+if (!require("BiocManager", quietly = TRUE))
+  install.packages("BiocManager")
 
+BiocManager::install("biomaRt")
 ```
 
 Step 2 - Go to the console in R studio and install the following libraries 
@@ -50,6 +63,12 @@ Step 2 - Go to the console in R studio and install the following libraries
 pip install primer3-py
 pip install pandas
 ```
+## Data Table Interpretation
+1. Identification - Description about where and how this set of primer is produced
+2. Forward Primer - From 5' to 3'
+3. Forward Primer - From 3' to 5'
+4. Diff in TM - Difference between TMs
+5. Hairpin Melting temperature - 
 
 
 
@@ -62,4 +81,4 @@ Please make sure to update tests as appropriate.
 
 ## License
 
-[MIT](https://choosealicense.com/licenses/mit/)
+[MIIIIIIIT](https://choosealicense.com/licenses/mit/)
