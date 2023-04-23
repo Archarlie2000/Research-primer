@@ -60,16 +60,16 @@ ui <- dashboardPage(
   
   dashboardSidebar(
     textInput(inputId = "primer_list", label = "Enter Primers", value = "rs25 rs16944 rs1884 rs17287498"),
-    numericInput(inputId = "primer_away", label = "Primer Distance (bp)", value = 476),
+    numericInput(inputId = "primer_away", label = "Primer Distance (bp)", value = 400),
     sliderInput("primer_left_length", label = ("Forward (bp)"), min = 10,
-                max = 40, value = c(15, 20)),
+                max = 40, value = c(15, 35)),
     sliderInput("primer_right_length", label = ("Reverse (bp)"), min = 10,
-                max = 40, value = c(15, 20)),
+                max = 40, value = c(15, 35)),
     sliderInput("left_TM", "Left TM max", 1, 100, 70),
     sliderInput("right_TM", "Right TM max", 1, 100, 70),
     sliderInput("left_hair_TM", "Left hairpin TM max", 1, 100, 70),
     sliderInput("right_hair_TM", "Right hairpin TM max", 1, 100, 70),
-    sliderInput("diff", "Max difference in TM", 1, 10, 5),
+    sliderInput("diff", "Max difference in TM", 1, 10, 2),
     sliderInput("Homodimer_left_dg", "Homodimer_left_dg", 1, 10, 5),
     sliderInput("Homodimer_right_dg", "Homodimer_right_dg", 1, 10, 5),
     sliderInput("Heterodimer_dg", "Heterodimer_dg", 1, 10, 5)
@@ -183,15 +183,7 @@ server <- function(input, output) {
                        primer_min,
                        primer_max,
                        primer_left_min,
-                       primer_left_max, 
-                       left_TM, 
-                       right_TM, 
-                       left_hair_TM, 
-                       right_hair_TM, 
-                       diff,
-                       Homodimer_left_dg, 
-                       Homodimer_right_dg, 
-                       Heterodimer_dg){
+                       primer_left_max){
   
     print("Check point 1")
     snp_list <- strsplit(primer, " ")[[1]]
@@ -283,28 +275,31 @@ server <- function(input, output) {
     
     
     print("Check point 3")
-    df <- get_data(mismatch_list, left_TM, right_TM, left_hair_TM, right_hair_TM, diff,
-                   Homodimer_left_dg, Homodimer_right_dg, Heterodimer_dg)
+    df <- get_data(mismatch_list)
     
     return(df)
   }
   
   
+  source_python("getfilter.py")
+  masterTable <- reactive(get_filter(unfiltered(),
+                                     input$left_TM, 
+                                     input$right_TM, 
+                                     input$left_hair_TM, 
+                                     input$right_hair_TM, 
+                                     input$diff,
+                                     input$Homodimer_left_dg, 
+                                     input$Homodimer_right_dg, 
+                                     input$Heterodimer_dg))
+  
+  
 
-  masterTable <- reactive(mart_api(input$primer_list,
+  unfiltered <- reactive(mart_api(input$primer_list,
                                    input$primer_away,
                                    input$primer_right_length[1],
                                    input$primer_right_length[2],
                                    input$primer_left_length[1],
-                                   input$primer_left_length[2],
-                                   input$left_TM, 
-                                   input$right_TM, 
-                                   input$left_hair_TM, 
-                                   input$right_hair_TM, 
-                                   input$diff,
-                                   input$Homodimer_left_dg, 
-                                   input$Homodimer_right_dg, 
-                                   input$Heterodimer_dg))
+                                   input$primer_left_length[2]))
   
   
   output$primer_table <- renderDataTable(masterTable()
