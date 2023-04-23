@@ -15,6 +15,8 @@
 # install.packages("stringi")
 # install.packages("tidyverse")
 # install.packages("shinydashboard")
+# install.packages("hexbin")
+# install.packages("patchwork")
 
 
 
@@ -29,8 +31,11 @@ library(DT)
 library(dplyr)
 library(tidyverse)
 library(stringi)
+
+#graphing
 library(ggplot2)
 library(hexbin)
+library(patchwork)
 
 # Bioinformatics
 library(biomaRt)
@@ -74,9 +79,7 @@ ui <- dashboardPage(
     fluidRow(
       column(
         plotOutput("snippet1"),
-        plotOutput("snippet2"),
-        plotOutput("snippet3"),
-        DT::dataTableOutput(outputId = "primer_table"), width = 8
+        DT::dataTableOutput(outputId = "primer_table"), width = 12
       )
     ),
   )
@@ -309,41 +312,31 @@ server <- function(input, output) {
   
   
   
-  
-  
   output$snippet1 <- renderPlot({
     
     df = masterTable()
     
-    ggplot(df, aes(`TM_left (°C)`, `TM_right (°C)`)) +
+    options(repr.plot.width=100, repr.plot.height=8)
+    
+    p1 <- ggplot(df, aes(`TM_left (°C)`, `TM_right (°C)`)) +
       geom_hex() + 
+      labs(title="TM") +
       theme_classic()
     
-  })
-  
-  output$snippet2 <- renderPlot({
+    p2 <- ggplot(df, aes(`Hairpin_left (°C)`, `Hairpin_right (°C)`)) +
+      geom_hex() + 
+      labs(title="Hairpin") +
+      theme_classic()
     
-    df = masterTable()
+    p3 <- ggplot(df, aes(`Homodimer_Left (kcal/mol)`, `Homodimer_Right (kcal/mol)`)) +
+      geom_hex() + 
+      labs(title="Homodimer") +
+      theme_classic()
+    
+    p1 + p2 + p3
 
-    
-    ggplot(df, aes(df$`Hairpin_left (°C)`, df$`Hairpin_right (°C)`)) +
-      geom_hex() + 
-      theme_classic()
+  })
 
-  })
-  
-  
-  output$snippet3 <- renderPlot({
-    
-    df = masterTable()
-    
-    ggplot(df, aes(df$`Homodimer_Left (kcal/mol)`, df$`Homodimer_Right (kcal/mol)`)) +
-      geom_hex() + 
-      theme_classic()
-  })
-  
-  
-  
   
 }
 
