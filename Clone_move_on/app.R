@@ -24,12 +24,13 @@
 # BiocManager::install("biomaRt")
 
 
-
 # Data processing
 library(DT)
 library(dplyr)
 library(tidyverse)
 library(stringi)
+library(ggplot2)
+library(hexbin)
 
 # Bioinformatics
 library(biomaRt)
@@ -54,21 +55,28 @@ ui <- dashboardPage(
   
   dashboardSidebar(
     textInput(inputId = "primer_list", label = "Enter Primers", value = "rs25 rs16944 rs1884 rs17287498"),
-    br(),
     numericInput(inputId = "primer_away", label = "Primer Distance (bp)", value = 476),
-    br(),
-    sliderInput("primer_right_length", label = h3("Reverse Primer length"), min = 10,
+    sliderInput("primer_left_length", label = ("Forward (bp)"), min = 10,
                 max = 40, value = c(15, 20)),
-    br(),
-    sliderInput("primer_left_length", label = h3("Forward Primer length"), min = 15,
-                max = 40, value = c(17, 20)),
-    br()
+    sliderInput("primer_right_length", label = ("Reverse (bp)"), min = 10,
+                max = 40, value = c(15, 20)),
+    sliderInput("left_TM", "Left TM max", 1, 100, 70),
+    sliderInput("right_TM", "Right TM max", 1, 100, 70),
+    sliderInput("left_hair_TM", "Left hairpin TM max", 1, 100, 70),
+    sliderInput("right_hair_TM", "Right hairpin TM max", 1, 100, 70),
+    sliderInput("diff", "Max difference in TM", 1, 10, 5),
+    sliderInput("Homodimer_left_dg", "Homodimer_left_dg", 1, 10, 5),
+    sliderInput("Homodimer_right_dg", "Homodimer_right_dg", 1, 10, 5),
+    sliderInput("Heterodimer_dg", "Heterodimer_dg", 1, 10, 5)
   ),
   
   dashboardBody(
     fluidRow(
       column(
-        DT::dataTableOutput(outputId = "primer_table"), width = 10
+        plotOutput("snippet1"),
+        plotOutput("snippet2"),
+        plotOutput("snippet3"),
+        DT::dataTableOutput(outputId = "primer_table"), width = 8
       )
     ),
   )
@@ -151,22 +159,37 @@ server <- function(input, output) {
   
   
   
-  
-  primer <- "rs25 rs16944 rs1884 rs17287498"
-  primer_away <- 100
-  primer_min <- 20
-  primer_max <- 30
-  primer_left_min <- 18
-  primer_left_max <- 30
+  # 
+  # primer <- "rs25 rs16944 rs1884 rs17287498"
+  # primer_away <- 100
+  # primer_min <- 20
+  # primer_max <- 30
+  # primer_left_min <- 18
+  # primer_left_max <- 30
+  # left_TM <- 70
+  # right_TM <- 70
+  # left_hair_TM <- 70
+  # right_hair_TM <- 70
+  # diff <- 5
+  # Homodimer_left_dg <- 5
+  # Homodimer_right_dg <- 5
+  # Heterodimer_dg <- 5
   
   mart_api <- function(primer,
                        primer_away,
                        primer_min,
                        primer_max,
                        primer_left_min,
-                       primer_left_max){
-    
-    
+                       primer_left_max, 
+                       left_TM, 
+                       right_TM, 
+                       left_hair_TM, 
+                       right_hair_TM, 
+                       diff,
+                       Homodimer_left_dg, 
+                       Homodimer_right_dg, 
+                       Heterodimer_dg){
+  
     print("Check point 1")
     snp_list <- strsplit(primer, " ")[[1]]
     upStream <- c("500")
@@ -257,22 +280,70 @@ server <- function(input, output) {
     
     
     print("Check point 3")
-    df <- get_data(mismatch_list)
+    df <- get_data(mismatch_list, left_TM, right_TM, left_hair_TM, right_hair_TM, diff,
+                   Homodimer_left_dg, Homodimer_right_dg, Heterodimer_dg)
     
     return(df)
   }
   
   
-  output$primer_table <- renderDataTable(
-    mart_api(input$primer_list,
-             input$primer_away,
-             input$primer_right_length[1],
-             input$primer_right_length[2],
-             input$primer_left_length[1],
-             input$primer_left_length[2])
+
+  masterTable <- reactive(mart_api(input$primer_list,
+                                   input$primer_away,
+                                   input$primer_right_length[1],
+                                   input$primer_right_length[2],
+                                   input$primer_left_length[1],
+                                   input$primer_left_length[2],
+                                   input$left_TM, 
+                                   input$right_TM, 
+                                   input$left_hair_TM, 
+                                   input$right_hair_TM, 
+                                   input$diff,
+                                   input$Homodimer_left_dg, 
+                                   input$Homodimer_right_dg, 
+                                   input$Heterodimer_dg))
+  
+  
+  output$primer_table <- renderDataTable(masterTable()
   )
   
-  output$Add <- renderText(addition(input$a,  input$b))
+  
+  
+  
+  
+  output$snippet1 <- renderPlot({
+    
+    df = masterTable()
+    
+    ggplot(df, aes(`TM_left (°C)`, `TM_right (°C)`)) +
+      geom_hex() + 
+      theme_classic()
+    
+  })
+  
+  output$snippet2 <- renderPlot({
+    
+    df = masterTable()
+
+    
+    ggplot(df, aes(df$`Hairpin_left (°C)`, df$`Hairpin_right (°C)`)) +
+      geom_hex() + 
+      theme_classic()
+
+  })
+  
+  
+  output$snippet3 <- renderPlot({
+    
+    df = masterTable()
+    
+    ggplot(df, aes(df$`Homodimer_Left (kcal/mol)`, df$`Homodimer_Right (kcal/mol)`)) +
+      geom_hex() + 
+      theme_classic()
+  })
+  
+  
+  
   
 }
 
