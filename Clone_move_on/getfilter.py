@@ -11,6 +11,7 @@ def get_filter(df, left_TM, right_TM,
                        Homodimer_right_dg, 
                        Heterodimer_dg):
                          
+  print("Python get fiiiiiiiiiilter activated")
   df = df[df['TM_left (°C)'] <= left_TM]
   df = df[df["TM_right (°C)"] <= right_TM]
   df = df[df["Hairpin_left (°C)"] <= left_hair_TM]

@@ -7,7 +7,7 @@ def get_data(df):
 
   mylist_1, mylist_2, mylist_3, mylist_4, mylist_5, mylist_6, mylist_7, mylist_25 = [], [], [], [], [], [], [], []
   
-  print("Check point 4")
+  print("Python get data activated")
   for i in range(len(df["primer"])):
     mylist_1.append(round(primer3.calc_tm(df["primer"][i]),0))
     mylist_2.append(round(primer3.calc_tm(df["rightPrimers"][i]),0))

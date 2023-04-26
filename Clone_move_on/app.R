@@ -17,7 +17,7 @@
 # install.packages("shinydashboard")
 # install.packages("hexbin")
 # install.packages("patchwork")
-
+# install.packages("plotly")
 
 
 # if (!require("BiocManager", quietly = TRUE))
@@ -36,6 +36,9 @@ library(stringi)
 library(ggplot2)
 library(hexbin)
 library(patchwork)
+library(plotly)
+
+
 
 # Bioinformatics
 library(biomaRt)
@@ -59,12 +62,12 @@ ui <- dashboardPage(
   dashboardHeader(title = "Primer Selection"),
   
   dashboardSidebar(
-    textInput(inputId = "primer_list", label = "Enter Primers", value = "rs25 rs16944 rs1884 rs17287498"),
-    numericInput(inputId = "primer_away", label = "Primer Distance (bp)", value = 400),
-    sliderInput("primer_left_length", label = ("Forward (bp)"), min = 10,
-                max = 40, value = c(15, 35)),
-    sliderInput("primer_right_length", label = ("Reverse (bp)"), min = 10,
-                max = 40, value = c(15, 35)),
+    textInput(inputId = "primer_list", label = "Enter SNP", value = "rs25 rs16944 rs1884 rs17287498"),
+    numericInput(inputId = "primer_away", label = "Amplicant Length (bp)", value = 400),
+    sliderInput("primer_left_length", label = "Forward (bp)", min = 10,
+                max = 40, value = c(15, 20)),
+    sliderInput("primer_right_length", label = "Reverse (bp)", min = 10,
+                max = 40, value = c(15, 20)),
     sliderInput("left_TM", "Left TM max", 1, 100, 70),
     sliderInput("right_TM", "Right TM max", 1, 100, 70),
     sliderInput("left_hair_TM", "Left hairpin TM max", 1, 100, 70),
@@ -78,7 +81,7 @@ ui <- dashboardPage(
   dashboardBody(
     fluidRow(
       column(
-        plotOutput("snippet1"),
+        plotlyOutput("snippet1"),
         DT::dataTableOutput(outputId = "primer_table"), width = 12
       )
     ),
@@ -113,6 +116,7 @@ server <- function(input, output) {
     substring(x, nchar(x) - 2, nchar(x) - 2) <- temp
     return(x)
   }
+  
   ## Mismatching on Ts
   get_strong2 <- function(x){
     temp <- ""
@@ -161,8 +165,6 @@ server <- function(input, output) {
   }
   
   
-  
-  # 
   # primer <- "rs25 rs16944 rs1884 rs17287498"
   # primer_away <- 100
   # primer_min <- 20
@@ -184,8 +186,10 @@ server <- function(input, output) {
                        primer_max,
                        primer_left_min,
                        primer_left_max){
-  
-    print("Check point 1")
+    
+    primer_away <- -primer_away
+    
+    print("Execute MART API")
     snp_list <- strsplit(primer, " ")[[1]]
     upStream <- c("500")
     downStream <- c("500")
@@ -226,14 +230,16 @@ server <- function(input, output) {
     variantsTrimmed <- variantsTrimmed %>% relocate(observations, .before = variations)
     variantsTrimmed <- variantsTrimmed %>% relocate(downstream, .before = variations)
     variantsTrimmed <- variantsTrimmed %>% unite("sequence", upstream:downstream, sep = "")
+    
     # add columns for the substrings leading up to and including the variant site
     for (i in primer_left_min:primer_left_max) {
       colname <- paste0("left", i)
       variantsTrimmed <- variantsTrimmed %>%
         mutate(!!colname := str_sub(sequence, 501 - i, 501))
     }
+    
     for (i in primer_min:primer_max) {
-      colname <- paste0("right", 500 - primer_away -i)
+      colname <- paste0("right", 500 - primer_away - i)
       variantsTrimmed <- variantsTrimmed %>% mutate(!!colname := str_sub(sequence,
                                                                          500 - primer_away - i,
                                                                          500 - primer_away))
@@ -274,8 +280,9 @@ server <- function(input, output) {
     
     
     
-    print("Check point 3")
+    print("Produced Mismatch list")
     df <- get_data(mismatch_list)
+    print("Produced Munfilter list")
     
     return(df)
   }
@@ -306,29 +313,43 @@ server <- function(input, output) {
   )
   
   
-  
-  output$snippet1 <- renderPlot({
+  output$snippet1 <- renderPlotly({
     
     df = masterTable()
     
     options(repr.plot.width=100, repr.plot.height=8)
     
-    p1 <- ggplot(df, aes(`TM_left (°C)`, `TM_right (°C)`)) +
+    print("get graphes")
+    p1 <- ggplotly(ggplot(df, aes(`TM_left (°C)`, `TM_right (°C)`)) +
       geom_hex() + 
       labs(title="TM") +
-      theme_classic()
+      theme_classic())
     
-    p2 <- ggplot(df, aes(`Hairpin_left (°C)`, `Hairpin_right (°C)`)) +
+    p2 <- ggplotly(ggplot(df, aes(`Hairpin_left (°C)`, `Hairpin_right (°C)`)) +
       geom_hex() + 
       labs(title="Hairpin") +
-      theme_classic()
+      theme_classic())
     
-    p3 <- ggplot(df, aes(`Homodimer_Left (kcal/mol)`, `Homodimer_Right (kcal/mol)`)) +
+    p3 <- ggplotly(ggplot(df, aes(`Homodimer_Left (kcal/mol)`, `Homodimer_Right (kcal/mol)`)) +
       geom_hex() + 
       labs(title="Homodimer") +
-      theme_classic()
+      theme_classic())
     
-    p1 + p2 + p3
+    m <- list(
+      
+      l = 50,
+      
+      r = 50,
+      
+      b = 100,
+      
+      t = 100,
+      
+      pad = 4
+      
+    )
+    
+    p1 %>% layout(autosize = F, width = 500, height = 400, margin = m)
 
   })
 
