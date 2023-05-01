@@ -152,6 +152,7 @@ server <- function(input, output) {
     substring(x, nchar(x) - 2, nchar(x) - 2) <- temp
     return(x)
   }
+  
   reverse_chars <- function(string)
   {
     # split string by characters
@@ -165,20 +166,43 @@ server <- function(input, output) {
   }
   
   
-  # primer <- "rs25 rs16944 rs1884 rs17287498"
-  # primer_away <- 100
-  # primer_min <- 20
-  # primer_max <- 30
-  # primer_left_min <- 18
-  # primer_left_max <- 30
-  # left_TM <- 70
-  # right_TM <- 70
-  # left_hair_TM <- 70
-  # right_hair_TM <- 70
-  # diff <- 5
-  # Homodimer_left_dg <- 5
-  # Homodimer_right_dg <- 5
-  # Heterodimer_dg <- 5
+  list_seq <- function(snp) {
+    first_position <- unlist(gregexpr('/', snp))[1]
+    number_slash <- str_count(snp, "/")
+    block <- str_sub(snp, first_position -1 , 
+                     first_position - 2 + number_slash*2 + 1) 
+    block <- gsub("/", "", block)
+    block <- strsplit(block, "")
+    
+    for (i in block) {
+      k <- paste(str_sub(snp, 1, first_position - 2),
+                 i,
+                 str_sub(snp, first_position - 2 + number_slash * 2 + 2, str_length(snp) ),
+                 sep = "")
+      
+    }
+    k = gsub("%", "", k)
+    k = k[!grepl("W", k)]
+    return(k)
+    
+  }
+  
+  
+  
+  primer <- "rs25 rs16944 rs1884 rs17287498"
+  primer_away <- 100
+  primer_min <- 20
+  primer_max <- 30
+  primer_left_min <- 18
+  primer_left_max <- 30
+  left_TM <- 70
+  right_TM <- 70
+  left_hair_TM <- 70
+  right_hair_TM <- 70
+  diff <- 5
+  Homodimer_left_dg <- 5
+  Homodimer_right_dg <- 5
+  Heterodimer_dg <- 5
   
   mart_api <- function(primer,
                        primer_away,
@@ -230,6 +254,24 @@ server <- function(input, output) {
     variantsTrimmed <- variantsTrimmed %>% relocate(observations, .before = variations)
     variantsTrimmed <- variantsTrimmed %>% relocate(downstream, .before = variations)
     variantsTrimmed <- variantsTrimmed %>% unite("sequence", upstream:downstream, sep = "")
+    
+
+    
+    ### Wrangling dataframe
+    
+    snp_wrangled <- data.frame(matrix(ncol = 2, nrow = 0))
+    
+    
+    
+    for (j in snp_sequence$`Variant name`){
+      for (i in list_seq(snp_sequence$`Variant sequences`[snp_sequence$`Variant name`==j])){
+        
+        snp_wrangled[nrow(snp_wrangled) + 1,] <- c(j, i)
+      }
+      
+    }
+    
+    colnames(snp_wrangled) = c("snpID", "Sequence")
     
 
     
