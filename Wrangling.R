@@ -4,7 +4,7 @@ upStream <- c("500")
 downStream <- c("500")
 
 
-
+snpmart <- useMart("ENSEMBL_MART_SNP", dataset = "hsapiens_snp")
 
 snp_sequence <- getBM(attributes = c('refsnp_id', 'snp'),
                       filters = c('snp_filter', 'upstream_flank', 'downstream_flank'),
@@ -28,6 +28,7 @@ list_seq <- function(snp) {
               sep = "")
   
   }
+  k = gsub("%", "", k)
   k = k[!grepl("W", k)]
   return(k)
   
@@ -35,20 +36,18 @@ list_seq <- function(snp) {
 
 
 
-snp_wrangled <- data.frame (mutation  = c(),
-                         sequence = c()
-)
-
 
 snp_wrangled <- data.frame(matrix(ncol = 2, nrow = 0))
 
 
+
 for (j in snp_sequence$`Variant name`){
 for (i in list_seq(snp_sequence$`Variant sequences`[snp_sequence$`Variant name`==j])){
-snp_wrangled[nrow(snp_wrangled) + 1,] <- c(j, i)
+  
+  snp_wrangled[nrow(snp_wrangled) + 1,] <- c(j, i)
 }
   
 }
 
-colnames(snp_wrangled) = c("name", "sequence")
+colnames(snp_wrangled) = c("snpID", "Sequence")
 

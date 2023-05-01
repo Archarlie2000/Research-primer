@@ -108,7 +108,19 @@ server <- function(input, output) {
   get_strong1 <- function(x){
     temp <- ""
     target <- str_sub(x , - 3, - 3)
-    target <- complement(target)
+
+    if (target == "A") {temp <- "G"} else
+      if (target == "G") {temp <- "A"} else
+        if (target == "C") {temp <- "T"} else
+          if (target == "T") {temp <- "C"}
+    substring(x, nchar(x) - 2, nchar(x) - 2) <- temp
+    return(x)
+  }
+  
+  left_flanking_get_strong1 <- function(x){
+    temp <- ""
+    target <- str_sub(x , 3, 3)
+
     if (target == "A") {temp <- "G"} else
       if (target == "G") {temp <- "A"} else
         if (target == "C") {temp <- "T"} else
@@ -121,7 +133,7 @@ server <- function(input, output) {
   get_strong2 <- function(x){
     temp <- ""
     target <- str_sub(x , - 3, - 3)
-    target <- complement(target)
+
     if (target == "T") {
       temp <- "T"
       substring(x, nchar(x) - 2, nchar(x) - 2) <- temp
@@ -129,10 +141,38 @@ server <- function(input, output) {
     else
       return(NULL)
   }
+  
+  left_flanking_get_strong2 <- function(x){
+    temp <- ""
+    target <- str_sub(x , 3, 3)
+
+    if (target == "T") {
+      temp <- "T"
+      substring(x, nchar(x) - 2, nchar(x) - 2) <- temp
+      return(x)}
+    else
+      return(NULL)
+  }
+  
+  
+  
   get_medium1 <- function(x){
     temp <- ""
     target <- str_sub(x , - 3, - 3)
-    target <- complement(target)
+
+    if (target == "A") {temp <- "A"} else
+      if (target == "G") {temp <- "G"} else
+        if (target == "C") {temp <- "C"} else
+          return(NULL)
+    substring(x, nchar(x) - 2, nchar(x) - 2) <- temp
+    return(x)
+  }
+  
+  
+  left_flanking_get_medium1 <- function(x){
+    temp <- ""
+    target <- str_sub(x , - 3, - 3)
+
     if (target == "A") {temp <- "A"} else
       if (target == "G") {temp <- "G"} else
         if (target == "C") {temp <- "C"} else
@@ -144,7 +184,19 @@ server <- function(input, output) {
   get_weak1 <- function(x){
     temp <- ""
     target <- str_sub(x , - 3, - 3)
-    target <- complement(target)
+
+    if (target == "C") {temp <- "A"} else
+      if (target == "A") {temp <- "C"} else
+        if (target == "G") {temp <- "T"} else
+          if (target == "T") {temp <- "G"}
+    substring(x, nchar(x) - 2, nchar(x) - 2) <- temp
+    return(x)
+  }
+  
+  left_flanking_get_weak1 <- function(x){
+    temp <- ""
+    target <- str_sub(x , - 3, - 3)
+
     if (target == "C") {temp <- "A"} else
       if (target == "A") {temp <- "C"} else
         if (target == "G") {temp <- "T"} else
@@ -189,12 +241,12 @@ server <- function(input, output) {
   
   
   
-  primer <- "rs25 rs16944 rs1884 rs17287498"
-  primer_away <- 100
-  primer_min <- 20
-  primer_max <- 30
+  primer <- "rs16944"
+  primer_away <- 400
+  primer_min <- 15
+  primer_max <- 16
   primer_left_min <- 18
-  primer_left_max <- 30
+  primer_left_max <- 19
   left_TM <- 70
   right_TM <- 70
   left_hair_TM <- 70
@@ -213,6 +265,8 @@ server <- function(input, output) {
     
     primer_away <- -primer_away
     
+    
+    # Accessing database
     print("Execute MART API")
     snp_list <- strsplit(primer, " ")[[1]]
     upStream <- c("500")
@@ -225,44 +279,16 @@ server <- function(input, output) {
                           mart = snpmart,
                           bmHeader = TRUE)
     
-    snp_sequence_split <- as.data.frame(str_split(snp_sequence$`Variant sequences`, "%"))
-    colnames(snp_sequence_split) <- snp_sequence$`Variant name`
-    rownames(snp_sequence_split) <- c("upstream", "variants", "downstream")
-    snps <- t(snp_sequence_split)
-    snpsTibble <- as_tibble(snps, rownames = NA)
-    vars_split <- str_split(snpsTibble$variants, "/")
-    n <- 10
-    vars_split_uniform <- as.data.frame(lapply(vars_split, `length<-`, n))
-    # need to name things to keep that straight
-    colnames(vars_split_uniform) <- snp_sequence$`Variant name`
-    vars_split_transposed <- t(vars_split_uniform)
-    variantsTibble <- as_tibble(vars_split_transposed, rownames = NA)
-    varListFinal <- mutate(variantsTibble, snpsTibble)
-    varListFinal['snpID'] <- snp_sequence$`Variant name`
-    variantsTibbleFinal <- as_tibble(varListFinal, rownames = NA)
-    variantsTibbleFinal2 <- pivot_longer(variantsTibbleFinal,
-                                         cols = V1:V10,
-                                         names_to = "variations",
-                                         values_to = "observations")
-    
-    variantsTrimmed <- drop_na(variantsTibbleFinal2)
-    # variantsTrimmed has everything we need to make the output for calling primer3
-    # need to reorder then combine some columns
-    # we want one string that is the upstream sequence, then the observation of the snp
-    # then the downstream sequence all together in one string
-    variantsTrimmed <- variantsTrimmed %>% relocate(snpID)
-    variantsTrimmed <- variantsTrimmed %>% relocate(observations, .before = variations)
-    variantsTrimmed <- variantsTrimmed %>% relocate(downstream, .before = variations)
-    variantsTrimmed <- variantsTrimmed %>% unite("sequence", upstream:downstream, sep = "")
-    
 
     
     ### Wrangling dataframe
     
+    
+    #Create a new data frame
     snp_wrangled <- data.frame(matrix(ncol = 2, nrow = 0))
     
     
-    
+    # Add each variation as a new string into each row
     for (j in snp_sequence$`Variant name`){
       for (i in list_seq(snp_sequence$`Variant sequences`[snp_sequence$`Variant name`==j])){
         
@@ -271,9 +297,9 @@ server <- function(input, output) {
       
     }
     
-    colnames(snp_wrangled) = c("snpID", "Sequence")
-    
-
+    # Rename columns and data frame
+    colnames(snp_wrangled) = c("snpID", "sequence")
+    variantsTrimmed <- snp_wrangled
     
     # add columns for the substrings leading up to and including the variant site
     for (i in primer_left_min:primer_left_max) {
@@ -290,26 +316,30 @@ server <- function(input, output) {
     }
     
     for (i in primer_left_min:primer_left_max) {
-      colname <- paste0("(right_flanking)_left", i)
+      colname <- paste0("(left_flanking)_left", i)
       variantsTrimmed <- variantsTrimmed %>%
         mutate(!!colname := str_sub(sequence, 501, 500 + i))
     }
     
     for (i in primer_min:primer_max) {
-      colname <- paste0("(right_flanking)_right", 500 + primer_away + i)
+      colname <- paste0("(left_flanking)_right", 500 + primer_away + i)
       variantsTrimmed <- variantsTrimmed %>% mutate(!!colname := str_sub(sequence,
                                                                          500 + primer_away - i,
                                                                          500 + primer_away))
     }
     
     
-    
-    
-    
     limit_left_start <- paste("left", primer_left_max, sep = "")
     limit_left_stop <- paste("left", primer_left_min, sep = "")
     limit_right_start <- paste("right", 500 - primer_away - primer_max, sep = "")
     limit_right_stop <- paste("right", 500 - primer_away - primer_min, sep = "")
+
+    
+    left_flanking_limit_left_start <- paste("(left_flanking)_left", primer_left_max, sep = "")
+    left_flanking_limit_left_stop <- paste("(left_flanking)_left", primer_left_min, sep = "")
+    left_flanking_limit_right_start <- paste("(left_flanking)_right", 500 + primer_away + primer_max, sep = "")
+    left_flanking_limit_right_stop <- paste("(left_flanking)_right", 500 + primer_away + primer_min, sep = "")
+    
     
     variantsTrimmed2 <- pivot_longer(variantsTrimmed,
                                      cols = limit_left_start:limit_left_stop,
@@ -320,32 +350,87 @@ server <- function(input, output) {
                                      names_to = "Right_side",
                                      values_to = "rightPrimers")
     
-    variantsTrimmed2 <- variantsTrimmed2[c(1,4,6,5,7)]
+    
+    variantsTrimmed2 <- pivot_longer(variantsTrimmed2,
+                                     cols = left_flanking_limit_left_start:left_flanking_limit_left_stop,
+                                     names_to = "left_flanking_Left_side",
+                                     values_to = "left_flanking_leftPrimers")
+    variantsTrimmed2 <- pivot_longer(variantsTrimmed2,
+                                     cols = left_flanking_limit_right_start:left_flanking_limit_right_stop,
+                                     names_to = "left_flanking_Right_side",
+                                     values_to = "left_flanking_rightPrimers")
     
     
-
+    
+    #variantsTrimmed2 <- variantsTrimmed2[c(1,4,6,5,7)]
+    
+  
+    
+    vt_partition_1 <- cbind(variantsTrimmed2$snpID, 
+                              variantsTrimmed2$Left_side,
+                              variantsTrimmed2$leftPrimers,
+                              variantsTrimmed2$Right_side,
+                              variantsTrimmed2$rightPrimers,
+                              "right"
+                              )
+    
+    vt_partition_2 <- cbind(variantsTrimmed2$snpID,
+                            variantsTrimmed2$left_flanking_Left_side,
+                            variantsTrimmed2$left_flanking_leftPrimers,
+                            variantsTrimmed2$left_flanking_Right_side,
+                            variantsTrimmed2$left_flanking_rightPrimers,
+                            "left")
+    
+    variantsTrimmed2 <- rbind(vt_partition_1, vt_partition_2) %>% data.frame()
+    
+    
+    colnames(variantsTrimmed2) <- c("snp", 
+                                   "forward_position",
+                                   "forward_primer",
+                                   "reversed_position",
+                                   "reversed_primer",
+                                   "flanking_direction")
     
     
     
-    
+    variantsTrimmed2$forward_position <-  gsub("[(left_flanking)_]", "",
+                                               as.character(variantsTrimmed2$forward_position))
+    variantsTrimmed2$reversed_position <-  gsub("[(left_flanking)_right]", "",
+                                             as.character(variantsTrimmed2$reversed_position))
     
     mismatch_list <- variantsTrimmed2 %>%
-      mutate(strong_mismatch_1 = map(leftPrimers, get_strong1),
-             strong_mismatch_2 = map(leftPrimers, get_strong2),
-             Medium_mismatch = map(leftPrimers, get_medium1),
-             Weak_mismatch = map(leftPrimers, get_weak1)) %>%
-      pivot_longer(
-        cols = c(strong_mismatch_1,
-                 strong_mismatch_2,
-                 Medium_mismatch,
-                 Weak_mismatch),
-        names_to = "Mismatch",
-        values_to = "primer",
-        values_drop_na = TRUE) %>%
-      mutate(Identidy = paste(snpID, Left_side, Right_side, Mismatch,sep = " ")) %>%
-      as.data.frame() %>%
-      dplyr::select(c(8, 7, 5)) %>%
-      mutate(rightPrimers = toupper(reverseComplement(rightPrimers)))
+      mutate(
+        strong_mismatch_1 = case_when(
+          flanking_direction == "right" ~ get_strong1(forward_primer[1]),
+          flanking_direction == "left" ~ left_flanking_get_strong1(forward_primer[1]) ),
+        strong_mismatch_2 = case_when(
+          flanking_direction == "right" ~ get_strong2(forward_primer[1]),
+          flanking_direction == "left" ~ left_flanking_get_strong2(forward_primer[1]) ),
+        Medium_mismatch = case_when(
+          flanking_direction == "right" ~ get_medium1(forward_primer[1]),
+          flanking_direction == "left" ~ left_flanking_get_medium1(forward_primer[1]) ),
+        Weak_mismatch = case_when(
+          flanking_direction == "right" ~ get_weak1(forward_primer[1]),
+          flanking_direction == "left" ~left_flanking_get_weak1(forward_primer[1]) ))
+    
+  
+    
+    # %>%
+    #   pivot_longer(
+    #     cols = c(strong_mismatch_1,
+    #              strong_mismatch_2,
+    #              Medium_mismatch,
+    #              Weak_mismatch),
+    #     names_to = "Mismatch",
+    #     values_to = "primer",
+    #     values_drop_na = TRUE)
+    
+    
+    # %>%
+    #   mutate(Identidy = paste(snpID, Left_side, Right_side, Mismatch,sep = " ")) %>%
+    #   as.data.frame() %>%
+    #   dplyr::select(c(8, 7, 5)) %>%
+    #   mutate(rightPrimers = toupper(reverseComplement(rightPrimers)))
     
     
     
