@@ -125,7 +125,7 @@ server <- function(input, output) {
       if (target == "G") {temp <- "A"} else
         if (target == "C") {temp <- "T"} else
           if (target == "T") {temp <- "C"}
-    substring(x, nchar(x) - 2, nchar(x) - 2) <- temp
+    substring(x, 3, 3) <- temp
     return(x)
   }
   
@@ -139,19 +139,18 @@ server <- function(input, output) {
       substring(x, nchar(x) - 2, nchar(x) - 2) <- temp
       return(x)}
     else
-      return(NULL)
+      return("N")
   }
   
   left_flanking_get_strong2 <- function(x){
     temp <- ""
     target <- str_sub(x , 3, 3)
-
     if (target == "T") {
       temp <- "T"
-      substring(x, nchar(x) - 2, nchar(x) - 2) <- temp
+      substring(x, 3, 3) <- temp
       return(x)}
     else
-      return(NULL)
+      return("N")
   }
   
   
@@ -163,9 +162,10 @@ server <- function(input, output) {
     if (target == "A") {temp <- "A"} else
       if (target == "G") {temp <- "G"} else
         if (target == "C") {temp <- "C"} else
-          return(NULL)
+          return("N")
     substring(x, nchar(x) - 2, nchar(x) - 2) <- temp
     return(x)
+    
   }
   
   
@@ -176,8 +176,8 @@ server <- function(input, output) {
     if (target == "A") {temp <- "A"} else
       if (target == "G") {temp <- "G"} else
         if (target == "C") {temp <- "C"} else
-          return(NULL)
-    substring(x, nchar(x) - 2, nchar(x) - 2) <- temp
+          return("N")
+    substring(x, 3, 3) <- temp
     return(x)
   }
   
@@ -201,7 +201,7 @@ server <- function(input, output) {
       if (target == "A") {temp <- "C"} else
         if (target == "G") {temp <- "T"} else
           if (target == "T") {temp <- "G"}
-    substring(x, nchar(x) - 2, nchar(x) - 2) <- temp
+    substring(x, 3, 3) <- temp
     return(x)
   }
   
@@ -398,20 +398,23 @@ server <- function(input, output) {
     variantsTrimmed2$reversed_position <-  gsub("[(left_flanking)_right]", "",
                                              as.character(variantsTrimmed2$reversed_position))
     
-    mismatch_list <- variantsTrimmed2 %>%
-      mutate(
-        strong_mismatch_1 = case_when(
-          flanking_direction == "right" ~ get_strong1(forward_primer[1]),
-          flanking_direction == "left" ~ left_flanking_get_strong1(forward_primer[1]) ),
-        strong_mismatch_2 = case_when(
-          flanking_direction == "right" ~ get_strong2(forward_primer[1]),
-          flanking_direction == "left" ~ left_flanking_get_strong2(forward_primer[1]) ),
-        Medium_mismatch = case_when(
-          flanking_direction == "right" ~ get_medium1(forward_primer[1]),
-          flanking_direction == "left" ~ left_flanking_get_medium1(forward_primer[1]) ),
-        Weak_mismatch = case_when(
-          flanking_direction == "right" ~ get_weak1(forward_primer[1]),
-          flanking_direction == "left" ~left_flanking_get_weak1(forward_primer[1]) ))
+    
+    
+    for (i in 1:nrow(variantsTrimmed2)){
+      if (variantsTrimmed2$flanking_direction[i] == "right")
+      {variantsTrimmed2$strong_mismatch_1[i] <-  get_strong1(variantsTrimmed2$forward_primer[i])
+       variantsTrimmed2$strong_mismatch_2[i] <-  get_strong2(variantsTrimmed2$forward_primer[i])
+       variantsTrimmed2$medium_mismatch_2[i] <-  get_medium1(variantsTrimmed2$forward_primer[i])
+       variantsTrimmed2$weak_mismatch_2[i] <-  get_weak1(variantsTrimmed2$forward_primer[i])
+      } else
+      {variantsTrimmed2$strong_mismatch_1[i] <-  left_flanking_get_strong1(variantsTrimmed2$forward_primer[i])
+      variantsTrimmed2$strong_mismatch_2[i] <-  left_flanking_get_strong2(variantsTrimmed2$forward_primer[i])
+      variantsTrimmed2$medium_mismatch_2[i] <-  left_flanking_get_medium1(variantsTrimmed2$forward_primer[i])
+      variantsTrimmed2$weak_mismatch_2[i] <-  left_flanking_get_weak1(variantsTrimmed2$forward_primer[i])}
+      
+    }
+    
+    
     
   
     
@@ -455,7 +458,6 @@ server <- function(input, output) {
                                      input$Heterodimer_dg))
   
   
-
   unfiltered <- reactive(mart_api(input$primer_list,
                                    input$primer_away,
                                    input$primer_right_length[1],
