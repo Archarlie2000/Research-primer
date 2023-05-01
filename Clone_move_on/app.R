@@ -231,6 +231,8 @@ server <- function(input, output) {
     variantsTrimmed <- variantsTrimmed %>% relocate(downstream, .before = variations)
     variantsTrimmed <- variantsTrimmed %>% unite("sequence", upstream:downstream, sep = "")
     
+
+    
     # add columns for the substrings leading up to and including the variant site
     for (i in primer_left_min:primer_left_max) {
       colname <- paste0("left", i)
@@ -244,6 +246,24 @@ server <- function(input, output) {
                                                                          500 - primer_away - i,
                                                                          500 - primer_away))
     }
+    
+    for (i in primer_left_min:primer_left_max) {
+      colname <- paste0("(right_flanking)_left", i)
+      variantsTrimmed <- variantsTrimmed %>%
+        mutate(!!colname := str_sub(sequence, 501, 500 + i))
+    }
+    
+    for (i in primer_min:primer_max) {
+      colname <- paste0("(right_flanking)_right", 500 + primer_away + i)
+      variantsTrimmed <- variantsTrimmed %>% mutate(!!colname := str_sub(sequence,
+                                                                         500 + primer_away - i,
+                                                                         500 + primer_away))
+    }
+    
+    
+    
+    
+    
     limit_left_start <- paste("left", primer_left_max, sep = "")
     limit_left_stop <- paste("left", primer_left_min, sep = "")
     limit_right_start <- paste("right", 500 - primer_away - primer_max, sep = "")
@@ -257,7 +277,15 @@ server <- function(input, output) {
                                      cols = limit_right_start:limit_right_stop,
                                      names_to = "Right_side",
                                      values_to = "rightPrimers")
+    
     variantsTrimmed2 <- variantsTrimmed2[c(1,4,6,5,7)]
+    
+    
+
+    
+    
+    
+    
     
     mismatch_list <- variantsTrimmed2 %>%
       mutate(strong_mismatch_1 = map(leftPrimers, get_strong1),
@@ -336,17 +364,11 @@ server <- function(input, output) {
       theme_classic())
     
     m <- list(
-      
       l = 50,
-      
       r = 50,
-      
       b = 100,
-      
       t = 100,
-      
       pad = 4
-      
     )
     
     p1 %>% layout(autosize = F, width = 500, height = 400, margin = m)
