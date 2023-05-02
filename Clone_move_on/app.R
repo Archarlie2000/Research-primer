@@ -81,7 +81,7 @@ ui <- dashboardPage(
   dashboardBody(
     fluidRow(
       column(
-        plotlyOutput("snippet1"),
+        #plotlyOutput("snippet1"),
         DT::dataTableOutput(outputId = "primer_table"), width = 12
       )
     ),
@@ -91,9 +91,12 @@ ui <- dashboardPage(
 # Define server logic required to draw a histogram
 server <- function(input, output) {
   
-  # Cpnnect R to
+  # Cpnnect R to python file
   source_python("getdata.py")
   
+  
+  
+  ## This is random graph that is for prove of concept
   output$distPlot <- renderPlot({
     # generate bins based on input$bins from ui.R
     x    <- faithful[, 2]
@@ -105,6 +108,8 @@ server <- function(input, output) {
          main = 'Histogram of waiting times')
   })
   
+  
+  ## Get strong mismatch for the last three bp
   get_strong1 <- function(x){
     temp <- ""
     target <- str_sub(x , - 3, - 3)
@@ -117,6 +122,7 @@ server <- function(input, output) {
     return(x)
   }
   
+  ## Get strong mismatch for the first three bp
   left_flanking_get_strong1 <- function(x){
     temp <- ""
     target <- str_sub(x , 3, 3)
@@ -129,7 +135,7 @@ server <- function(input, output) {
     return(x)
   }
   
-  ## Mismatching on Ts
+  ## Get strong mismatch for the last three bp, there are two types
   get_strong2 <- function(x){
     temp <- ""
     target <- str_sub(x , - 3, - 3)
@@ -142,6 +148,7 @@ server <- function(input, output) {
       return("N")
   }
   
+  ## Get strong mismatch for the first three bp
   left_flanking_get_strong2 <- function(x){
     temp <- ""
     target <- str_sub(x , 3, 3)
@@ -154,7 +161,7 @@ server <- function(input, output) {
   }
   
   
-  
+  ## Get medium mismatch for the last three bp
   get_medium1 <- function(x){
     temp <- ""
     target <- str_sub(x , - 3, - 3)
@@ -168,7 +175,7 @@ server <- function(input, output) {
     
   }
   
-  
+  ## Get weak mismatch for the first three bp
   left_flanking_get_medium1 <- function(x){
     temp <- ""
     target <- str_sub(x , - 3, - 3)
@@ -181,6 +188,8 @@ server <- function(input, output) {
     return(x)
   }
   
+  
+  ## Get weak mismatch for the last three bp
   get_weak1 <- function(x){
     temp <- ""
     target <- str_sub(x , - 3, - 3)
@@ -193,6 +202,8 @@ server <- function(input, output) {
     return(x)
   }
   
+  
+  ## Get weak mismatch for the first three bp
   left_flanking_get_weak1 <- function(x){
     temp <- ""
     target <- str_sub(x , - 3, - 3)
@@ -205,6 +216,8 @@ server <- function(input, output) {
     return(x)
   }
   
+  
+  ## Get reversed sequnce of a string (There is a beter way to do this, but)
   reverse_chars <- function(string)
   {
     # split string by characters
@@ -218,6 +231,7 @@ server <- function(input, output) {
   }
   
   
+  ## Warngling SNP list to individual rows
   list_seq <- function(snp) {
     first_position <- unlist(gregexpr('/', snp))[1]
     number_slash <- str_count(snp, "/")
@@ -236,26 +250,53 @@ server <- function(input, output) {
     k = gsub("%", "", k)
     k = k[!grepl("W", k)]
     return(k)
-    
   }
   
   
+  get_filter <- function(df, 
+                         left_TM, 
+                         right_TM, 
+                         left_hair_TM, 
+                         right_hair_TM, 
+                         diff, 
+                         Homodimer_left_dg, 
+                         Homodimer_right_dg, 
+                         Heterodimer_dg) {
+    
+    print("R get filter activated")
+    df2 <- df
+    
+    df2 <- df2[df2$`TM_left (°C)` < left_TM, ]
+    df2 <- df2[df2$`TM_right (°C)` < right_TM, ]
+    df2 <- df2[df2$`TM_Diff (°C)` < diff, ]
+    df2 <- df2[df2$`Hairpin_left (°C)` < left_hair_TM, ]
+    df2 <- df2[df2$`Hairpin_right (°C)` < right_hair_TM, ]
+    df2 <- df2[df2$`Heterodimer (kcal/mol)` < Heterodimer_dg, ]
+    df2 <- df2[df2$`Homodimer_Left (kcal/mol)` < Homodimer_left_dg, ]
+    df2 <- df2[df2$`Homodimer_Right (kcal/mol)` < Homodimer_right_dg, ]
+    
+    return(df2)
+  }
   
-  primer <- "rs16944"
-  primer_away <- 400
-  primer_min <- 15
-  primer_max <- 16
-  primer_left_min <- 18
-  primer_left_max <- 19
-  left_TM <- 70
-  right_TM <- 70
-  left_hair_TM <- 70
-  right_hair_TM <- 70
-  diff <- 5
-  Homodimer_left_dg <- 5
-  Homodimer_right_dg <- 5
-  Heterodimer_dg <- 5
   
+  ## These are the paramters used for trouble shotting
+  # primer <- "rs16944"
+  # primer_away <- 400
+  # primer_min <- 15
+  # primer_max <- 16
+  # primer_left_min <- 18
+  # primer_left_max <- 19
+  # left_TM <- 70
+  # right_TM <- 70
+  # left_hair_TM <- 70
+  # right_hair_TM <- 70
+  # diff <- 5
+  # Homodimer_left_dg <- 5
+  # Homodimer_right_dg <- 5
+  # Heterodimer_dg <- 5
+  
+  
+  ## The main function
   mart_api <- function(primer,
                        primer_away,
                        primer_min,
@@ -263,6 +304,7 @@ server <- function(input, output) {
                        primer_left_min,
                        primer_left_max){
     
+    ## Not sure why, but it works
     primer_away <- -primer_away
     
     
@@ -283,7 +325,7 @@ server <- function(input, output) {
     
     ### Wrangling dataframe
     
-    
+    print("Data gathered")
     #Create a new data frame
     snp_wrangled <- data.frame(matrix(ncol = 2, nrow = 0))
     
@@ -302,12 +344,15 @@ server <- function(input, output) {
     variantsTrimmed <- snp_wrangled
     
     # add columns for the substrings leading up to and including the variant site
+    # produce right flanking left primer
     for (i in primer_left_min:primer_left_max) {
       colname <- paste0("left", i)
       variantsTrimmed <- variantsTrimmed %>%
         mutate(!!colname := str_sub(sequence, 501 - i, 501))
     }
     
+    
+    # produce right flanking right primer
     for (i in primer_min:primer_max) {
       colname <- paste0("right", 500 - primer_away - i)
       variantsTrimmed <- variantsTrimmed %>% mutate(!!colname := str_sub(sequence,
@@ -315,12 +360,15 @@ server <- function(input, output) {
                                                                          500 - primer_away))
     }
     
+    # produce left flanking left primer
     for (i in primer_left_min:primer_left_max) {
       colname <- paste0("(left_flanking)_left", i)
       variantsTrimmed <- variantsTrimmed %>%
         mutate(!!colname := str_sub(sequence, 501, 500 + i))
     }
     
+    
+    # produce left flanking right primer
     for (i in primer_min:primer_max) {
       colname <- paste0("(left_flanking)_right", 500 + primer_away + i)
       variantsTrimmed <- variantsTrimmed %>% mutate(!!colname := str_sub(sequence,
@@ -328,19 +376,20 @@ server <- function(input, output) {
                                                                          500 + primer_away))
     }
     
-    
+    ## Define the range of flanking for pivoting (right flanking)
     limit_left_start <- paste("left", primer_left_max, sep = "")
     limit_left_stop <- paste("left", primer_left_min, sep = "")
     limit_right_start <- paste("right", 500 - primer_away - primer_max, sep = "")
     limit_right_stop <- paste("right", 500 - primer_away - primer_min, sep = "")
 
-    
+    ## Define the range of flanking for pivoting (left flanking)
     left_flanking_limit_left_start <- paste("(left_flanking)_left", primer_left_max, sep = "")
     left_flanking_limit_left_stop <- paste("(left_flanking)_left", primer_left_min, sep = "")
     left_flanking_limit_right_start <- paste("(left_flanking)_right", 500 + primer_away + primer_max, sep = "")
     left_flanking_limit_right_stop <- paste("(left_flanking)_right", 500 + primer_away + primer_min, sep = "")
     
     
+    ## Pivot the column into a long list
     variantsTrimmed2 <- pivot_longer(variantsTrimmed,
                                      cols = limit_left_start:limit_left_stop,
                                      names_to = "Left_side",
@@ -349,8 +398,6 @@ server <- function(input, output) {
                                      cols = limit_right_start:limit_right_stop,
                                      names_to = "Right_side",
                                      values_to = "rightPrimers")
-    
-    
     variantsTrimmed2 <- pivot_longer(variantsTrimmed2,
                                      cols = left_flanking_limit_left_start:left_flanking_limit_left_stop,
                                      names_to = "left_flanking_Left_side",
@@ -362,9 +409,8 @@ server <- function(input, output) {
     
     
     
-    #variantsTrimmed2 <- variantsTrimmed2[c(1,4,6,5,7)]
-    
-  
+    ## combine left and flanking into a longer list since 
+    ## previous one is not split in the right way
     
     vt_partition_1 <- cbind(variantsTrimmed2$snpID, 
                               variantsTrimmed2$Left_side,
@@ -383,7 +429,6 @@ server <- function(input, output) {
     
     variantsTrimmed2 <- rbind(vt_partition_1, vt_partition_2) %>% data.frame()
     
-    
     colnames(variantsTrimmed2) <- c("snp", 
                                    "forward_position",
                                    "forward_primer",
@@ -392,61 +437,63 @@ server <- function(input, output) {
                                    "flanking_direction")
     
     
-    
+    ## Fix the syntax for naming
     variantsTrimmed2$forward_position <-  gsub("[(left_flanking)_]", "",
                                                as.character(variantsTrimmed2$forward_position))
     variantsTrimmed2$reversed_position <-  gsub("[(left_flanking)_right]", "",
                                              as.character(variantsTrimmed2$reversed_position))
     
     
-    
+    ### Get mismatches for left primers depend on the flanking direaction
     for (i in 1:nrow(variantsTrimmed2)){
       if (variantsTrimmed2$flanking_direction[i] == "right")
       {variantsTrimmed2$strong_mismatch_1[i] <-  get_strong1(variantsTrimmed2$forward_primer[i])
        variantsTrimmed2$strong_mismatch_2[i] <-  get_strong2(variantsTrimmed2$forward_primer[i])
-       variantsTrimmed2$medium_mismatch_2[i] <-  get_medium1(variantsTrimmed2$forward_primer[i])
-       variantsTrimmed2$weak_mismatch_2[i] <-  get_weak1(variantsTrimmed2$forward_primer[i])
+       variantsTrimmed2$medium_mismatch[i] <-  get_medium1(variantsTrimmed2$forward_primer[i])
+       variantsTrimmed2$weak_mismatch[i] <-  get_weak1(variantsTrimmed2$forward_primer[i])
       } else
       {variantsTrimmed2$strong_mismatch_1[i] <-  left_flanking_get_strong1(variantsTrimmed2$forward_primer[i])
       variantsTrimmed2$strong_mismatch_2[i] <-  left_flanking_get_strong2(variantsTrimmed2$forward_primer[i])
-      variantsTrimmed2$medium_mismatch_2[i] <-  left_flanking_get_medium1(variantsTrimmed2$forward_primer[i])
-      variantsTrimmed2$weak_mismatch_2[i] <-  left_flanking_get_weak1(variantsTrimmed2$forward_primer[i])}
-      
-    }
+      variantsTrimmed2$medium_mismatch[i] <-  left_flanking_get_medium1(variantsTrimmed2$forward_primer[i])
+      variantsTrimmed2$weak_mismatch[i] <-  left_flanking_get_weak1(variantsTrimmed2$forward_primer[i])}
+      }
     
     
+    ## Pivot all mismtaches into a long list
+    ## Remove all Ns from primer list
+    ## get reversed complementrayr for right primer
+    ## deselect some columns
+    mismatch_list <- variantsTrimmed2 %>%
+      pivot_longer(
+        cols = c(strong_mismatch_1,
+                 strong_mismatch_2,
+                 medium_mismatch,
+                 weak_mismatch),
+        names_to = "Mismatch",
+        values_to = "primer",
+        values_drop_na = TRUE) %>% 
+      filter(primer != "N") %>% 
+      mutate(Identidy = paste(snp, 
+                              forward_position, 
+                              reversed_position, 
+                              Mismatch, 
+                              flanking_direction,sep = ", ")) %>%
+      as.data.frame() %>%
+      mutate(reversed_primer = toupper(reverseComplement(reversed_primer))) %>% 
+      dplyr::select(c(9, 8, 5))
     
-  
+    colnames(mismatch_list) = c("Identify", "Forward", "Reversed")
+
     
-    # %>%
-    #   pivot_longer(
-    #     cols = c(strong_mismatch_1,
-    #              strong_mismatch_2,
-    #              Medium_mismatch,
-    #              Weak_mismatch),
-    #     names_to = "Mismatch",
-    #     values_to = "primer",
-    #     values_drop_na = TRUE)
-    
-    
-    # %>%
-    #   mutate(Identidy = paste(snpID, Left_side, Right_side, Mismatch,sep = " ")) %>%
-    #   as.data.frame() %>%
-    #   dplyr::select(c(8, 7, 5)) %>%
-    #   mutate(rightPrimers = toupper(reverseComplement(rightPrimers)))
-    
-    
-    
-    
-    print("Produced Mismatch list")
+    print("Mismatch list Produced ")
     df <- get_data(mismatch_list)
-    print("Produced Munfilter list")
+    print("Unfiltered list Produced ")
     
     return(df)
   }
   
   
-  source_python("getfilter.py")
+  
   masterTable <- reactive(get_filter(unfiltered(),
                                      input$left_TM, 
                                      input$right_TM, 

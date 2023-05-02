@@ -8,16 +8,16 @@ def get_data(df):
   mylist_1, mylist_2, mylist_3, mylist_4, mylist_5, mylist_6, mylist_7, mylist_25 = [], [], [], [], [], [], [], []
   
   print("Python get data activated")
-  for i in range(len(df["primer"])):
-    mylist_1.append(round(primer3.calc_tm(df["primer"][i]),0))
-    mylist_2.append(round(primer3.calc_tm(df["rightPrimers"][i]),0))
-    mylist_25.append(abs(round(primer3.calc_tm(df["primer"][i])-
-                              primer3.calc_tm(df["rightPrimers"][i]))))
-    mylist_3.append(round(primer3.calc_hairpin(df["primer"][i]).tm,0))
-    mylist_4.append(round(primer3.calc_hairpin(df["rightPrimers"][i]).tm,0))
-    mylist_5.append(round(primer3.bindings.calc_heterodimer(df["primer"][i],df["rightPrimers"][i]).dg/1000,1))
-    mylist_6.append(round(primer3.bindings.calc_homodimer(df["primer"][i]).dg/1000,1))
-    mylist_7.append(round(primer3.bindings.calc_homodimer(df["rightPrimers"][i]).dg/1000,1))
+  for i in range(len(df["Forward"])):
+    mylist_1.append(round(primer3.calc_tm(df["Forward"][i]),0))
+    mylist_2.append(round(primer3.calc_tm(df["Reversed"][i]),0))
+    mylist_25.append(abs(round(primer3.calc_tm(df["Forward"][i])-
+                              primer3.calc_tm(df["Reversed"][i]))))
+    mylist_3.append(round(primer3.calc_hairpin(df["Forward"][i]).tm,0))
+    mylist_4.append(round(primer3.calc_hairpin(df["Reversed"][i]).tm,0))
+    mylist_5.append(round(primer3.bindings.calc_heterodimer(df["Forward"][i],df["Reversed"][i]).dg/1000,1))
+    mylist_6.append(round(primer3.bindings.calc_homodimer(df["Forward"][i]).dg/1000,1))
+    mylist_7.append(round(primer3.bindings.calc_homodimer(df["Reversed"][i]).dg/1000,1))
 
   df["TM_left (°C)" ] = mylist_1
   df["TM_right (°C)"] = mylist_2
@@ -28,8 +28,8 @@ def get_data(df):
   df["Homodimer_Left (kcal/mol)"] = mylist_6
   df["Homodimer_Right (kcal/mol)"] = mylist_7
   
-  df.rename(columns = {'primer':'Forward (bp)'}, inplace = True)
-  df.rename(columns = {'rightPrimers':'Reversed (bp)'}, inplace = True)
+  df.rename(columns = {'Forward':'Forward (bp)'}, inplace = True)
+  df.rename(columns = {'Reversed':'Reversed (bp)'}, inplace = True)
 
 
   return(df)
