@@ -64,11 +64,11 @@ ui <- dashboardPage(
   
   dashboardSidebar(
     textInput(inputId = "primer_list", label = "Enter SNP", value = "rs25 rs16944 rs1884 rs17287498"),
-    numericInput(inputId = "primer_away", label = "Amplicant Length (bp)", value = 400),
-    sliderInput("primer_left_length", label = "Forward (bp)", min = 10,
-                max = 40, value = c(15, 20)),
-    sliderInput("primer_right_length", label = "Reverse (bp)", min = 10,
-                max = 40, value = c(15, 20)),
+    numericInput(inputId = "primer_away", label = "Amplicant Length (bp)", value = 300),
+    sliderInput("primer_left_length", label = "Forward (bp)", min = 5,
+                max = 30, value = c(10, 15)),
+    sliderInput("primer_right_length", label = "Reverse (bp)", min = 5,
+                max = 30, value = c(10, 15)),
     sliderInput("left_TM", "Left TM max", 1, 100, 70),
     sliderInput("right_TM", "Right TM max", 1, 100, 70),
     sliderInput("left_hair_TM", "Left hairpin TM max", 1, 100, 70),
@@ -468,7 +468,7 @@ server <- function(input, output) {
     
     
     
-    
+    print(nrow(variantsTrimmed2))
     
     
     ### Get mismatches for left primers depend on the flanking direaction
@@ -484,6 +484,7 @@ server <- function(input, output) {
       variantsTrimmed2$medium_mismatch[i] <-  left_flanking_get_medium1(variantsTrimmed2$forward_primer[i])
       variantsTrimmed2$weak_mismatch[i] <-  left_flanking_get_weak1(variantsTrimmed2$forward_primer[i])}
       }
+    
     
     
     ## Pivot all mismtaches into a long list
