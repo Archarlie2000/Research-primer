@@ -275,17 +275,19 @@ server <- function(input, output) {
     df2 <- df2[df2$`Homodimer_Left (kcal/mol)` < Homodimer_left_dg, ]
     df2 <- df2[df2$`Homodimer_Right (kcal/mol)` < Homodimer_right_dg, ]
     
+    
+    print("Give df2")
     return(df2)
   }
   
   
   ## These are the paramters used for trouble shotting
-  # primer <- "rs16944"
+  # primer <- "rs25 rs16944 rs1884 rs17287498"
   # primer_away <- 400
   # primer_min <- 15
-  # primer_max <- 16
-  # primer_left_min <- 18
-  # primer_left_max <- 19
+  # primer_max <- 20
+  # primer_left_min <- 15
+  # primer_left_max <- 20
   # left_TM <- 70
   # right_TM <- 70
   # left_hair_TM <- 70
@@ -390,23 +392,42 @@ server <- function(input, output) {
     
     
     ## Pivot the column into a long list
-    variantsTrimmed2 <- pivot_longer(variantsTrimmed,
+    variantsTrimmed_temp_1 <- pivot_longer(variantsTrimmed,
                                      cols = limit_left_start:limit_left_stop,
                                      names_to = "Left_side",
-                                     values_to = "leftPrimers")
-    variantsTrimmed2 <- pivot_longer(variantsTrimmed2,
+                                     values_to = "leftPrimers") %>% 
+      dplyr::select(c(21, 22))
+      
+    
+    variantsTrimmed_temp_2 <- pivot_longer(variantsTrimmed,
                                      cols = limit_right_start:limit_right_stop,
                                      names_to = "Right_side",
-                                     values_to = "rightPrimers")
-    variantsTrimmed2 <- pivot_longer(variantsTrimmed2,
+                                     values_to = "rightPrimers") %>% 
+      dplyr::select(c(21, 22))
+    
+    
+    variantsTrimmed_temp_3 <- pivot_longer(variantsTrimmed,
                                      cols = left_flanking_limit_left_start:left_flanking_limit_left_stop,
                                      names_to = "left_flanking_Left_side",
-                                     values_to = "left_flanking_leftPrimers")
-    variantsTrimmed2 <- pivot_longer(variantsTrimmed2,
+                                     values_to = "left_flanking_leftPrimers") %>% 
+      dplyr::select(c(21, 22))
+    
+    variantsTrimmed_temp_4 <- pivot_longer(variantsTrimmed,
                                      cols = left_flanking_limit_right_start:left_flanking_limit_right_stop,
                                      names_to = "left_flanking_Right_side",
-                                     values_to = "left_flanking_rightPrimers")
+                                     values_to = "left_flanking_rightPrimers") %>% 
+      dplyr::select(c(21, 22))
     
+    
+    variantsTrimmed2 <- cbind(variantsTrimmed$snpID,
+                              variantsTrimmed$sequence,
+                              variantsTrimmed_temp_1, 
+                              variantsTrimmed_temp_2,
+                              variantsTrimmed_temp_3,
+                              variantsTrimmed_temp_4)
+    
+    colnames(variantsTrimmed2)[1] <- "snpID"
+    colnames(variantsTrimmed2)[2] <- "sequence"
     
     
     ## combine left and flanking into a longer list since 
@@ -481,10 +502,9 @@ server <- function(input, output) {
       as.data.frame() %>%
       mutate(reversed_primer = toupper(reverseComplement(reversed_primer))) %>% 
       dplyr::select(c(9, 8, 5))
-    
+     
     colnames(mismatch_list) = c("Identify", "Forward", "Reversed")
 
-    
     print("Mismatch list Produced ")
     df <- get_data(mismatch_list)
     print("Unfiltered list Produced ")
