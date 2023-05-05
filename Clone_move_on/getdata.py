@@ -31,7 +31,7 @@ def get_data(df):
   df.rename(columns = {'Forward':'Forward (bp)'}, inplace = True)
   df.rename(columns = {'Reversed':'Reversed (bp)'}, inplace = True)
 
-
+  
   return(df)
 
 

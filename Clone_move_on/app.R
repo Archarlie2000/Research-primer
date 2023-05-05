@@ -43,6 +43,7 @@ library(plotly)
 # Bioinformatics
 library(biomaRt)
 library(spgs)
+library(TmCalculator)
 
 
 # Deployment
@@ -280,12 +281,12 @@ server <- function(input, output) {
     return(df2)
   }
   
-  
-  ## These are the paramters used for trouble shotting
+
+  # These are the paramters used for trouble shotting
   # primer <- "rs25 rs16944 rs1884 rs17287498"
   # primer_away <- 400
   # primer_min <- 15
-  # primer_max <- 20
+  # primer_max <- 40
   # primer_left_min <- 15
   # primer_left_max <- 20
   # left_TM <- 70
@@ -304,7 +305,8 @@ server <- function(input, output) {
                        primer_min,
                        primer_max,
                        primer_left_min,
-                       primer_left_max){
+                       primer_left_max,
+                       diff){
     
     ## Not sure why, but it works
     primer_away <- -primer_away
@@ -344,6 +346,8 @@ server <- function(input, output) {
     # Rename columns and data frame
     colnames(snp_wrangled) = c("snpID", "sequence")
     variantsTrimmed <- snp_wrangled
+    variantsTrimmed_ghost <- snp_wrangled
+    
     
     # add columns for the substrings leading up to and including the variant site
     # produce right flanking left primer
@@ -365,7 +369,7 @@ server <- function(input, output) {
     # produce left flanking left primer
     for (i in primer_left_min:primer_left_max) {
       colname <- paste0("(left_flanking)_left", i)
-      variantsTrimmed <- variantsTrimmed %>%
+      variantsTrimmed_ghost <- variantsTrimmed_ghost %>%
         mutate(!!colname := str_sub(sequence, 501, 500 + i))
     }
     
@@ -373,7 +377,7 @@ server <- function(input, output) {
     # produce left flanking right primer
     for (i in primer_min:primer_max) {
       colname <- paste0("(left_flanking)_right", 500 + primer_away + i)
-      variantsTrimmed <- variantsTrimmed %>% mutate(!!colname := str_sub(sequence,
+      variantsTrimmed_ghost <- variantsTrimmed_ghost %>% mutate(!!colname := str_sub(sequence,
                                                                          500 + primer_away - i,
                                                                          500 + primer_away))
     }
@@ -391,64 +395,62 @@ server <- function(input, output) {
     left_flanking_limit_right_stop <- paste("(left_flanking)_right", 500 + primer_away + primer_min, sep = "")
     
     
+    
+    
     ## Pivot the column into a long list
     variantsTrimmed_temp_1 <- pivot_longer(variantsTrimmed,
                                      cols = limit_left_start:limit_left_stop,
                                      names_to = "Left_side",
                                      values_to = "leftPrimers") %>% 
-      dplyr::select(c(21, 22))
-      
-    
-    variantsTrimmed_temp_2 <- pivot_longer(variantsTrimmed,
+                            pivot_longer(
                                      cols = limit_right_start:limit_right_stop,
                                      names_to = "Right_side",
-                                     values_to = "rightPrimers") %>% 
-      dplyr::select(c(21, 22))
+                                     values_to = "rightPrimers")
     
     
-    variantsTrimmed_temp_3 <- pivot_longer(variantsTrimmed,
+    variantsTrimmed_temp_2 <- pivot_longer(variantsTrimmed_ghost,
                                      cols = left_flanking_limit_left_start:left_flanking_limit_left_stop,
                                      names_to = "left_flanking_Left_side",
                                      values_to = "left_flanking_leftPrimers") %>% 
-      dplyr::select(c(21, 22))
-    
-    variantsTrimmed_temp_4 <- pivot_longer(variantsTrimmed,
+                            pivot_longer(
                                      cols = left_flanking_limit_right_start:left_flanking_limit_right_stop,
                                      names_to = "left_flanking_Right_side",
-                                     values_to = "left_flanking_rightPrimers") %>% 
-      dplyr::select(c(21, 22))
+                                     values_to = "left_flanking_rightPrimers")
     
     
     variantsTrimmed2 <- cbind(variantsTrimmed$snpID,
                               variantsTrimmed$sequence,
                               variantsTrimmed_temp_1, 
-                              variantsTrimmed_temp_2,
-                              variantsTrimmed_temp_3,
-                              variantsTrimmed_temp_4)
+                              variantsTrimmed_temp_2)
     
     colnames(variantsTrimmed2)[1] <- "snpID"
     colnames(variantsTrimmed2)[2] <- "sequence"
     
     
+    
+    
     ## combine left and flanking into a longer list since 
     ## previous one is not split in the right way
     
-    vt_partition_1 <- cbind(variantsTrimmed2$snpID, 
-                              variantsTrimmed2$Left_side,
-                              variantsTrimmed2$leftPrimers,
-                              variantsTrimmed2$Right_side,
-                              variantsTrimmed2$rightPrimers,
+    vt_partition_1 <- cbind(variantsTrimmed_temp_1$snpID, 
+                            variantsTrimmed_temp_1$Left_side,
+                            variantsTrimmed_temp_1$leftPrimers,
+                            variantsTrimmed_temp_1$Right_side,
+                            variantsTrimmed_temp_1$rightPrimers,
                               "right"
                               )
     
-    vt_partition_2 <- cbind(variantsTrimmed2$snpID,
-                            variantsTrimmed2$left_flanking_Left_side,
-                            variantsTrimmed2$left_flanking_leftPrimers,
-                            variantsTrimmed2$left_flanking_Right_side,
-                            variantsTrimmed2$left_flanking_rightPrimers,
+    vt_partition_2 <- cbind(variantsTrimmed_temp_2$snpID,
+                            variantsTrimmed_temp_2$left_flanking_Left_side,
+                            variantsTrimmed_temp_2$left_flanking_leftPrimers,
+                            variantsTrimmed_temp_2$left_flanking_Right_side,
+                            variantsTrimmed_temp_2$left_flanking_rightPrimers,
                             "left")
     
-    variantsTrimmed2 <- rbind(vt_partition_1, vt_partition_2) %>% data.frame()
+    variantsTrimmed2 <- rbind(vt_partition_1,vt_partition_2) %>% data.frame()
+    
+    
+    
     
     colnames(variantsTrimmed2) <- c("snp", 
                                    "forward_position",
@@ -463,6 +465,10 @@ server <- function(input, output) {
                                                as.character(variantsTrimmed2$forward_position))
     variantsTrimmed2$reversed_position <-  gsub("[(left_flanking)_right]", "",
                                              as.character(variantsTrimmed2$reversed_position))
+    
+    
+    
+    
     
     
     ### Get mismatches for left primers depend on the flanking direaction
@@ -505,7 +511,27 @@ server <- function(input, output) {
      
     colnames(mismatch_list) = c("Identify", "Forward", "Reversed")
 
+    print(nrow(mismatch_list))
+    
+    con <- list()
+
+    for (i in 1:nrow(mismatch_list)){
+
+      k = (Tm_NN(mismatch_list$Forward[i], Na =50)[[1]] - 
+        Tm_NN(mismatch_list$Reversed[i], Na =50)[[1]]) <= diff
+      
+      con <- append(con, k )
+    }
+    
+    con <- as.logical(con)
+    mismatch_list$temp <- con
+    
+    mismatch_list <- mismatch_list[mismatch_list$temp == 1, ]  %>%  
+      dplyr::select (-temp)
+    
+    
     print("Mismatch list Produced ")
+    print(nrow(mismatch_list))
     df <- get_data(mismatch_list)
     print("Unfiltered list Produced ")
     
@@ -530,7 +556,8 @@ server <- function(input, output) {
                                    input$primer_right_length[1],
                                    input$primer_right_length[2],
                                    input$primer_left_length[1],
-                                   input$primer_left_length[2]))
+                                   input$primer_left_length[2],
+                                  input$diff))
   
   
   output$primer_table <- renderDataTable(masterTable()
