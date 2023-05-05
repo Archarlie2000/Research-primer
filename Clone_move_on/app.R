@@ -64,11 +64,12 @@ ui <- dashboardPage(
   
   dashboardSidebar(
     textInput(inputId = "primer_list", label = "Enter SNP", value = "rs25 rs16944 rs1884 rs17287498"),
-    numericInput(inputId = "primer_away", label = "Amplicant Length (bp)", value = 300),
-    sliderInput("primer_left_length", label = "Forward (bp)", min = 5,
-                max = 30, value = c(10, 15)),
-    sliderInput("primer_right_length", label = "Reverse (bp)", min = 5,
-                max = 30, value = c(10, 15)),
+    numericInput(inputId = "primer_away", label = "Amplicant Length (bp)", value = 350),
+    numericInput(inputId = "shift", label = "Shift (bp)", value = 4),
+    sliderInput("primer_left_length", label = "Forward (bp)", min = 10,
+                max = 30, value = c(15, 17)),
+    sliderInput("primer_right_length", label = "Reverse (bp)", min = 10,
+                max = 30, value = c(15, 17)),
     sliderInput("left_TM", "Left TM max", 1, 100, 70),
     sliderInput("right_TM", "Right TM max", 1, 100, 70),
     sliderInput("left_hair_TM", "Left hairpin TM max", 1, 100, 70),
@@ -94,8 +95,7 @@ server <- function(input, output) {
   
   # Cpnnect R to python file
   source_python("getdata.py")
-  
-  
+
   
   ## This is random graph that is for prove of concept
   output$distPlot <- renderPlot({
@@ -278,6 +278,7 @@ server <- function(input, output) {
     
     
     print("Give df2")
+    
     return(df2)
   }
   
@@ -286,9 +287,9 @@ server <- function(input, output) {
   # primer <- "rs25 rs16944 rs1884 rs17287498"
   # primer_away <- 400
   # primer_min <- 15
-  # primer_max <- 40
+  # primer_max <- 18
   # primer_left_min <- 15
-  # primer_left_max <- 20
+  # primer_left_max <- 18
   # left_TM <- 70
   # right_TM <- 70
   # left_hair_TM <- 70
@@ -297,6 +298,7 @@ server <- function(input, output) {
   # Homodimer_left_dg <- 5
   # Homodimer_right_dg <- 5
   # Heterodimer_dg <- 5
+  # shift <- 5
   
   
   ## The main function
@@ -306,7 +308,8 @@ server <- function(input, output) {
                        primer_max,
                        primer_left_min,
                        primer_left_max,
-                       diff){
+                       diff,
+                       shift){
     
     ## Not sure why, but it works
     primer_away <- -primer_away
@@ -348,6 +351,23 @@ server <- function(input, output) {
     variantsTrimmed <- snp_wrangled
     variantsTrimmed_ghost <- snp_wrangled
     
+    
+    mismatch_list_collected <- data.frame(Identify = c(),
+                                          Forward = c(),
+                                          Reversed = c()
+    ) 
+    
+    ### Insert mega for loop
+    ###
+    ###
+    ###
+    
+    
+    
+    
+    for (primer_away in primer_away:(primer_away+shift)){
+      print("Amplicant distance")
+      print(primer_away)
     
     # add columns for the substrings leading up to and including the variant site
     # produce right flanking left primer
@@ -467,10 +487,6 @@ server <- function(input, output) {
                                              as.character(variantsTrimmed2$reversed_position))
     
     
-    
-    print(nrow(variantsTrimmed2))
-    
-    
     ### Get mismatches for left primers depend on the flanking direaction
     for (i in 1:nrow(variantsTrimmed2)){
       if (variantsTrimmed2$flanking_direction[i] == "right")
@@ -512,10 +528,10 @@ server <- function(input, output) {
      
     colnames(mismatch_list) = c("Identify", "Forward", "Reversed")
 
-    print(nrow(mismatch_list))
     
+  
+    ## Pre filtering with TM
     con <- list()
-
     for (i in 1:nrow(mismatch_list)){
 
       k = (Tm_NN(mismatch_list$Forward[i], Na =50)[[1]] - 
@@ -527,13 +543,23 @@ server <- function(input, output) {
     con <- as.logical(con)
     mismatch_list$temp <- con
     
+    # Drop the temp colum
     mismatch_list <- mismatch_list[mismatch_list$temp == 1, ]  %>%  
       dplyr::select (-temp)
     
-    
-    print("Mismatch list Produced ")
+    print("nrow(mismatch_list)")
     print(nrow(mismatch_list))
-    df <- get_data(mismatch_list)
+    
+    
+    mismatch_list_collected <- rbind(mismatch_list_collected, mismatch_list)
+  
+    }
+    
+    print("rows of mismatch collected = ")
+    print(nrow(mismatch_list_collected))
+    
+    
+    df <- get_data(mismatch_list_collected)
     print("Unfiltered list Produced ")
     
     return(df)
@@ -558,7 +584,8 @@ server <- function(input, output) {
                                    input$primer_right_length[2],
                                    input$primer_left_length[1],
                                    input$primer_left_length[2],
-                                  input$diff))
+                                  input$diff,
+                                  input$shift))
   
   
   output$primer_table <- renderDataTable(masterTable()
