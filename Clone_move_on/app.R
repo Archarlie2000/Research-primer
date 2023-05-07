@@ -65,19 +65,19 @@ ui <- dashboardPage(
   dashboardSidebar(
     textInput(inputId = "primer_list", label = "Enter SNP", value = "rs25 rs16944 rs1884 rs17287498"),
     numericInput(inputId = "primer_away", label = "Amplicant Length (bp)", value = 350),
-    numericInput(inputId = "shift", label = "Shift (bp)", value = 50),
-    sliderInput("primer_left_length", label = "Forward (bp)", min = 10,
-                max = 30, value = c(15, 25)),
-    sliderInput("primer_right_length", label = "Reverse (bp)", min = 10,
-                max = 30, value = c(15, 25)),
+    numericInput(inputId = "shift", label = "Shift (bp)", value = 3),
+    sliderInput("primer_left_length", label = "Forward (bp)", min = 15,
+                max = 30, value = c(18, 20)),
+    sliderInput("primer_right_length", label = "Reverse (bp)", min = 15,
+                max = 30, value = c(18, 20)),
     sliderInput("left_TM", "Left TM max", 1, 100, 70),
     sliderInput("right_TM", "Right TM max", 1, 100, 70),
-    sliderInput("left_hair_TM", "Left hairpin TM max", 1, 100, 70),
-    sliderInput("right_hair_TM", "Right hairpin TM max", 1, 100, 70),
+    sliderInput("left_hair_TM", "Left hairpin max (°C)", 1, 100, 70),
+    sliderInput("right_hair_TM", "Right hairpin max (°C)", 1, 100, 70),
     sliderInput("diff", "Max difference in TM", 1, 10, 2),
-    sliderInput("Homodimer_left_dg", "Homodimer_left_dg", 1, 10, 5),
-    sliderInput("Homodimer_right_dg", "Homodimer_right_dg", 1, 10, 5),
-    sliderInput("Heterodimer_dg", "Heterodimer_dg", 1, 10, 5)
+    sliderInput("Homodimer_left_dg", "Homodimer left (°C)", 1, 70,40),
+    sliderInput("Homodimer_right_dg", "Homodimer right (°C)", 1, 70, 40),
+    sliderInput("Heterodimer_dg", "Heterodimer (°C)", 1, 70, 40)
   ),
   
   dashboardBody(
@@ -273,11 +273,30 @@ server <- function(input, output) {
     df2 <- df2[df2$`Hairpin_left (°C)` < left_hair_TM, ]
     df2 <- df2[df2$`Hairpin_right (°C)` < right_hair_TM, ]
     df2 <- df2[df2$`Heterodimer (kcal/mol)` < Heterodimer_dg, ]
+    df2 <- df2[df2$`Heterodimer (kcal/mol)` > 0, ]
     df2 <- df2[df2$`Homodimer_Left (kcal/mol)` < Homodimer_left_dg, ]
+    df2 <- df2[df2$`Homodimer_Left (kcal/mol)` > 0, ]
     df2 <- df2[df2$`Homodimer_Right (kcal/mol)` < Homodimer_right_dg, ]
+    df2 <- df2[df2$`Homodimer_Right (kcal/mol)` > 0, ]
     
+    
+    colnames(df2) <- c("Identidy",
+                       "Forward (bp)",
+                       "Reversed (bp)",
+                       "TM_L (°C)",
+                       "TM_R (°C)",
+                       "TM diff (°C)",
+                       "TM_L Hairpin (°C)",
+                       "TM_R Hairpin (°C)",
+                       "Heterodimer (°C)",
+                       "Homodimer_L (°C)",
+                       "Homodimer_R (°C)")
+    
+    #df2 <- df2[ c(1,2,3,4,) ]
     
     print("Give df2")
+    
+    
     
     return(df2)
   }
