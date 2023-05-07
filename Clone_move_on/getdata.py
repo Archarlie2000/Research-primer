@@ -15,9 +15,9 @@ def get_data(df):
                               primer3.calc_tm(df["Reversed"][i]))))
     mylist_3.append(round(primer3.calc_hairpin(df["Forward"][i]).tm,0))
     mylist_4.append(round(primer3.calc_hairpin(df["Reversed"][i]).tm,0))
-    mylist_5.append(round(primer3.bindings.calc_heterodimer(df["Forward"][i],df["Reversed"][i]).dg/1000,1))
-    mylist_6.append(round(primer3.bindings.calc_homodimer(df["Forward"][i]).dg/1000,1))
-    mylist_7.append(round(primer3.bindings.calc_homodimer(df["Reversed"][i]).dg/1000,1))
+    mylist_5.append(round(primer3.bindings.calc_heterodimer(df["Forward"][i],df["Reversed"][i]).tm,1))
+    mylist_6.append(round(primer3.bindings.calc_homodimer(df["Forward"][i]).tm,1))
+    mylist_7.append(round(primer3.bindings.calc_homodimer(df["Reversed"][i]).tm,1))
 
   df["TM_left (°C)" ] = mylist_1
   df["TM_right (°C)"] = mylist_2
@@ -33,5 +33,6 @@ def get_data(df):
 
   
   return(df)
+
 
 
