@@ -62,7 +62,17 @@ ui <- dashboardPage(
   
   dashboardHeader(title = "Primer Selection"),
   
+  
+  
   dashboardSidebar(
+    
+    
+    
+    sidebarMenu(
+      menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard")),
+      menuItem("Widgets", tabName = "The chosen", icon = icon("th"))
+    ),
+    
     textInput(inputId = "primer_list", label = "Enter SNP", value = "rs25 rs16944 rs1884 rs17287498"),
     numericInput(inputId = "primer_away", label = "Amplicant Length (bp)", value = 350),
     numericInput(inputId = "shift", label = "Shift (bp)", value = 3),
@@ -70,7 +80,8 @@ ui <- dashboardPage(
                 max = 30, value = c(18, 20)),
     sliderInput("primer_right_length", label = "Reverse (bp)", min = 15,
                 max = 30, value = c(18, 20)),
-    sliderInput("left_TM", "Left TM max", 1, 100, 70),
+    sliderInput("left_TM", label = "Left TM max (°C)", min = 30,
+                max = 75, value = c(55, 70)),
     sliderInput("right_TM", "Right TM max", 1, 100, 70),
     sliderInput("left_hair_TM", "Left hairpin max (°C)", 1, 100, 70),
     sliderInput("right_hair_TM", "Right hairpin max (°C)", 1, 100, 70),
@@ -79,6 +90,28 @@ ui <- dashboardPage(
     sliderInput("Homodimer_right_dg", "Homodimer right (°C)", 1, 70, 40),
     sliderInput("Heterodimer_dg", "Heterodimer (°C)", 1, 70, 40)
   ),
+  
+  
+  # dashboardBody(
+  #   tabItems(
+  #     # First tab content
+  #     tabItem(tabName = "dashboard",
+  #             fluidRow(
+  #               box(plotOutput("plot1", height = 250)),
+  #               
+  #               box(
+  #                 title = "Controls",
+  #                 sliderInput("slider", "Number of observations:", 1, 100, 50)
+  #               )
+  #             )
+  #     ),
+  #     
+  #     # Second tab content
+  #     tabItem(tabName = "widgets",
+  #             h2("Widgets tab content")
+  #     )
+  #   )
+  # )
   
   dashboardBody(
     fluidRow(
@@ -255,7 +288,8 @@ server <- function(input, output) {
   
   
   get_filter <- function(df, 
-                         left_TM, 
+                         left_TM_min,
+                         left_TM_max,
                          right_TM, 
                          left_hair_TM, 
                          right_hair_TM, 
@@ -267,17 +301,18 @@ server <- function(input, output) {
     print("R get filter activated")
     df2 <- df
     
-    df2 <- df2[df2$`TM_left (°C)` < left_TM, ]
+    df2 <- df2[df2$`TM_left (°C)` < left_TM_max, ]
+    df2 <- df2[df2$`TM_left (°C)` > left_TM_min, ]
     df2 <- df2[df2$`TM_right (°C)` < right_TM, ]
     df2 <- df2[df2$`TM_Diff (°C)` < diff, ]
     df2 <- df2[df2$`Hairpin_left (°C)` < left_hair_TM, ]
     df2 <- df2[df2$`Hairpin_right (°C)` < right_hair_TM, ]
     df2 <- df2[df2$`Heterodimer (kcal/mol)` < Heterodimer_dg, ]
-    df2 <- df2[df2$`Heterodimer (kcal/mol)` > 0, ]
+    #df2 <- df2[df2$`Heterodimer (kcal/mol)` > 0, ]
     df2 <- df2[df2$`Homodimer_Left (kcal/mol)` < Homodimer_left_dg, ]
-    df2 <- df2[df2$`Homodimer_Left (kcal/mol)` > 0, ]
+    #df2 <- df2[df2$`Homodimer_Left (kcal/mol)` > 0, ]
     df2 <- df2[df2$`Homodimer_Right (kcal/mol)` < Homodimer_right_dg, ]
-    df2 <- df2[df2$`Homodimer_Right (kcal/mol)` > 0, ]
+    #df2 <- df2[df2$`Homodimer_Right (kcal/mol)` > 0, ]
     
     
     colnames(df2) <- c("Identidy",
@@ -382,7 +417,7 @@ server <- function(input, output) {
     ###
     
     
-    
+    print("Start big loop")
     
     for (primer_away in primer_away:(primer_away+shift)){
       print("Amplicant distance")
@@ -587,7 +622,8 @@ server <- function(input, output) {
   
   
   masterTable <- reactive(get_filter(unfiltered(),
-                                     input$left_TM, 
+                                     input$left_TM[1],
+                                     input$left_TM[2],
                                      input$right_TM, 
                                      input$left_hair_TM, 
                                      input$right_hair_TM, 
