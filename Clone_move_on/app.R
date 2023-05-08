@@ -57,69 +57,45 @@ library(shinydashboard)
 options(repos = BiocManager::repositories())
 
 
-# Define UI for application that draws a histogram
 ui <- dashboardPage(
-  
-  dashboardHeader(title = "Primer Selection"),
-  
-  
-  
+  dashboardHeader(title = "Basic dashboard"),
   dashboardSidebar(
-    
-    
-    
     sidebarMenu(
       menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard")),
-      menuItem("Widgets", tabName = "The chosen", icon = icon("th"))
-    ),
-    
-    textInput(inputId = "primer_list", label = "Enter SNP", value = "rs25 rs16944 rs1884 rs17287498"),
-    numericInput(inputId = "primer_away", label = "Amplicant Length (bp)", value = 350),
-    numericInput(inputId = "shift", label = "Shift (bp)", value = 3),
-    sliderInput("primer_left_length", label = "Forward (bp)", min = 15,
-                max = 30, value = c(18, 20)),
-    sliderInput("primer_right_length", label = "Reverse (bp)", min = 15,
-                max = 30, value = c(18, 20)),
-    sliderInput("left_TM", label = "Left TM max (°C)", min = 30,
-                max = 75, value = c(55, 70)),
-    sliderInput("right_TM", "Right TM max", 1, 100, 70),
-    sliderInput("left_hair_TM", "Left hairpin max (°C)", 1, 100, 70),
-    sliderInput("right_hair_TM", "Right hairpin max (°C)", 1, 100, 70),
-    sliderInput("diff", "Max difference in TM", 1, 10, 2),
-    sliderInput("Homodimer_left_dg", "Homodimer left (°C)", 1, 70,40),
-    sliderInput("Homodimer_right_dg", "Homodimer right (°C)", 1, 70, 40),
-    sliderInput("Heterodimer_dg", "Heterodimer (°C)", 1, 70, 40)
+      menuItem("Analysis", tabName = "Analysis", icon = icon("th")),
+      
+      textInput(inputId = "primer_list", label = "Enter SNP", value = "rs1121980, rs9939609, rs7903146, rs7903146"),
+      numericInput(inputId = "primer_away", label = "Amplicant Length (bp)", value = 350),
+      numericInput(inputId = "shift", label = "Shift (bp)", value = 1),
+      sliderInput("primer_left_length", label = "Forward (bp)", min = 15,
+                  max = 30, value = c(18, 20)),
+      sliderInput("primer_right_length", label = "Reverse (bp)", min = 15,
+                  max = 30, value = c(18, 20)),
+      sliderInput("left_TM", label = "Left TM max (°C)", min = 30,
+                  max = 75, value = c(55, 70)),
+      sliderInput("right_TM", "Right TM max", 1, 100, 70),
+      sliderInput("left_hair_TM", "Left hairpin max (°C)", 1, 100, 70),
+      sliderInput("right_hair_TM", "Right hairpin max (°C)", 1, 100, 70),
+      sliderInput("diff", "Max difference in TM", 1, 10, 2),
+      sliderInput("Homodimer_left_dg", "Homodimer left (°C)", 1, 70,40),
+      sliderInput("Homodimer_right_dg", "Homodimer right (°C)", 1, 70, 40),
+      sliderInput("Heterodimer_dg", "Heterodimer (°C)", 1, 70, 40)
+    )
   ),
-  
-  
-  # dashboardBody(
-  #   tabItems(
-  #     # First tab content
-  #     tabItem(tabName = "dashboard",
-  #             fluidRow(
-  #               box(plotOutput("plot1", height = 250)),
-  #               
-  #               box(
-  #                 title = "Controls",
-  #                 sliderInput("slider", "Number of observations:", 1, 100, 50)
-  #               )
-  #             )
-  #     ),
-  #     
-  #     # Second tab content
-  #     tabItem(tabName = "widgets",
-  #             h2("Widgets tab content")
-  #     )
-  #   )
-  # )
-  
   dashboardBody(
-    fluidRow(
-      column(
-        #plotlyOutput("snippet1"),
-        DT::dataTableOutput(outputId = "primer_table"), width = 12
-      )
-    ),
+    tabItems(
+      # First tab content
+      tabItem(tabName = "dashboard",
+              column(
+                DT::dataTableOutput(outputId = "primer_table"), width = 12,
+              )
+      ),
+      
+      # Second tab content
+      tabItem(tabName = "Analysis",
+              downloadButton("downloadData", "Download")
+      ) 
+    )
   )
 )
 
@@ -338,7 +314,7 @@ server <- function(input, output) {
   
 
   # These are the paramters used for trouble shotting
-  # primer <- "rs25 rs16944 rs1884 rs17287498"
+  # primer <- "rs1121980, rs9939609"
   # primer_away <- 400
   # primer_min <- 15
   # primer_max <- 18
@@ -644,6 +620,16 @@ server <- function(input, output) {
   
   
   output$primer_table <- renderDataTable(masterTable()
+  )
+  
+  
+  output$downloadData <- downloadHandler(
+    filename = function() {
+      paste("Save a df", ".csv", sep = "")
+    },
+    content = function(file) {
+      write.csv(masterTable(), file, row.names = FALSE)
+    }
   )
   
   
