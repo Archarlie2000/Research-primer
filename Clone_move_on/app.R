@@ -6,6 +6,7 @@
 # Library installation
 
 
+
 # install.packages("reticulate")
 # install.packages("DT")
 # install.packages("shiny")
@@ -18,12 +19,15 @@
 # install.packages("hexbin")
 # install.packages("patchwork")
 # install.packages("plotly")
+# install.packages("TmCalculator")
+
 
 
 # if (!require("BiocManager", quietly = TRUE))
 #   install.packages("BiocManager")
 # 
 # BiocManager::install("biomaRt")
+
 
 
 # Data processing
