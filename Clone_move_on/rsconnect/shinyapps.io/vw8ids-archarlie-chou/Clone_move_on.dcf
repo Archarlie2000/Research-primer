@@ -5,9 +5,9 @@ account: vw8ids-archarlie-chou
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 8936538
-bundleId: 7176757
+bundleId: 7199519
 url: https://vw8ids-archarlie-chou.shinyapps.io/Clone_move_on/
-when: 1683258141.26728
-lastSyncTime: 1683258141.26729
+when: 1683727672.39167
+lastSyncTime: 1683727672.39169
 asMultiple: FALSE
 asStatic: FALSE
