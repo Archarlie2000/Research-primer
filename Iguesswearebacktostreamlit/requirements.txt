@@ -1,3 +1,2 @@
 streamlit
-rpy2.robjects
-rpy2.robjects.packages
+rpy2
