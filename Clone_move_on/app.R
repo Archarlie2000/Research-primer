@@ -326,7 +326,8 @@ server <- function(input, output) {
                        "Homodimer_R (°C)")
 
     #df2 <- df2[ c(1,2,3,4,) ]
-
+    df2 <- df2 %>% 
+      mutate_if(is.numeric, round, digits = 2)
     print("Give df2")
     
     
