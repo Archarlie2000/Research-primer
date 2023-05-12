@@ -47,12 +47,11 @@ library(plotly)
 # Bioinformatics
 library(biomaRt)
 library(spgs)
-library(TmCalculator)
+library(primer3)
 
 
 # Deployment
 library(shinydashboard)
-library(reticulate)
 library(shiny)
 library(rsconnect)
 library(shinydashboard)
@@ -105,9 +104,7 @@ ui <- dashboardPage(
 
 # Define server logic required to draw a histogram
 server <- function(input, output) {
-  
-  # Cpnnect R to python file
-  source_python("getdata.py")
+
 
   
   ## This is random graph that is for prove of concept
@@ -281,6 +278,27 @@ server <- function(input, output) {
     print("R get filter activated")
     df2 <- df
     
+    
+    
+    for (i in 1:nrow(df)){
+      
+      df2$`TM_left (°C)`[i] = calculate_tm(df$Forward[i])
+      df2$`TM_right (°C)`[i] = calculate_tm(df$Reversed[i])
+      df2$`TM_Diff (°C)`[i] = df2$`TM_left (°C)`[i] - df2$`TM_right (°C)`[i]
+      df2$`Hairpin_left (°C)`[i] = calculate_hairpin(df$Forward[i])$temp
+      df2$`Hairpin_right (°C)`[i] = calculate_hairpin(df$Reversed[i])$temp
+      df2$`Heterodimer (kcal/mol)`[i] = calculate_dimer(df$Forward[i], df$Reversed[i])$temp
+      df2$`Homodimer_Left (kcal/mol)`[i] = calculate_homodimer(df$Forward[i])$temp
+      df2$`Homodimer_Right (kcal/mol)`[i] = calculate_homodimer(df$Reversed[i])$temp
+      
+    }
+    
+    
+    
+
+    
+    
+    
     df2 <- df2[df2$`TM_left (°C)` < left_TM_max, ]
     df2 <- df2[df2$`TM_left (°C)` > left_TM_min, ]
     df2 <- df2[df2$`TM_right (°C)` < right_TM, ]
@@ -293,8 +311,8 @@ server <- function(input, output) {
     #df2 <- df2[df2$`Homodimer_Left (kcal/mol)` > 0, ]
     df2 <- df2[df2$`Homodimer_Right (kcal/mol)` < Homodimer_right_dg, ]
     #df2 <- df2[df2$`Homodimer_Right (kcal/mol)` > 0, ]
-    
-    
+
+
     colnames(df2) <- c("Identidy",
                        "Forward (bp)",
                        "Reversed (bp)",
@@ -306,9 +324,9 @@ server <- function(input, output) {
                        "Heterodimer (°C)",
                        "Homodimer_L (°C)",
                        "Homodimer_R (°C)")
-    
+
     #df2 <- df2[ c(1,2,3,4,) ]
-    
+
     print("Give df2")
     
     
@@ -565,21 +583,8 @@ server <- function(input, output) {
     
   
     ## Pre filtering with TM
-    con <- list()
-    for (i in 1:nrow(mismatch_list)){
 
-      k = (Tm_NN(mismatch_list$Forward[i], Na =50)[[1]] - 
-        Tm_NN(mismatch_list$Reversed[i], Na =50)[[1]]) <= diff
-      
-      con <- append(con, k )
-    }
-    
-    con <- as.logical(con)
-    mismatch_list$temp <- con
-    
-    # Drop the temp colum
-    mismatch_list <- mismatch_list[mismatch_list$temp == 1, ]  %>%  
-      dplyr::select (-temp)
+
     
     print("nrow(mismatch_list)")
     print(nrow(mismatch_list))
@@ -593,10 +598,9 @@ server <- function(input, output) {
     print(nrow(mismatch_list_collected))
     
     
-    df <- get_data(mismatch_list_collected)
-    print("Unfiltered list Produced ")
     
-    return(df)
+    
+    return(mismatch_list_collected)
   }
   
   
@@ -636,40 +640,7 @@ server <- function(input, output) {
     }
   )
   
-  
-  output$snippet1 <- renderPlotly({
-    
-    df = masterTable()
-    
-    options(repr.plot.width=100, repr.plot.height=8)
-    
-    print("get graphes")
-    p1 <- ggplotly(ggplot(df, aes(`TM_left (°C)`, `TM_right (°C)`)) +
-      geom_hex() + 
-      labs(title="TM") +
-      theme_classic())
-    
-    p2 <- ggplotly(ggplot(df, aes(`Hairpin_left (°C)`, `Hairpin_right (°C)`)) +
-      geom_hex() + 
-      labs(title="Hairpin") +
-      theme_classic())
-    
-    p3 <- ggplotly(ggplot(df, aes(`Homodimer_Left (kcal/mol)`, `Homodimer_Right (kcal/mol)`)) +
-      geom_hex() + 
-      labs(title="Homodimer") +
-      theme_classic())
-    
-    m <- list(
-      l = 50,
-      r = 50,
-      b = 100,
-      t = 100,
-      pad = 4
-    )
-    
-    p1 %>% layout(autosize = F, width = 500, height = 400, margin = m)
 
-  })
 
   
 }

@@ -1,13 +1,13 @@
 
-import rpy2.robjects as robjects
-import rpy2.robjects.packages as rpackages
+# import rpy2.robjects as robjects
+# import rpy2.robjects.packages as rpackages
 import streamlit as st
 import pandas as pd
 import numpy as np
 
 
-Bioc = rpackages.importr('BiocManager')
-BioM = rpackages.importr('biomaRt')
+# Bioc = rpackages.importr('BiocManager')
+# BioM = rpackages.importr('biomaRt')
 
 
 st.title("Add One to Your Number")
@@ -20,7 +20,7 @@ if input_number:
     output_number = input_number + 1
     st.write("Input value:", input_number)
     st.write("Output value:", output_number)
-    
+
 # robjects.r('''
 #     add_nums <- function(x, y) {
 #         return(x + y)
