@@ -6,28 +6,23 @@
 # Library installation
 
 
-
-# install.packages("reticulate")
 # install.packages("DT")
-# install.packages("shiny")
-# install.packages("spgs")
-# install.packages("rsconnect")
 # install.packages("dplyr")
+# install.packages("tidyverse")
 # install.packages("stringi")
-# install.packages("tidyverse")z
+# install.packages("ggplot2")
 # install.packages("hexbin")
 # install.packages("patchwork")
 # install.packages("plotly")
-# install.packages("TmCalculator")
 # install.packages("devtools")
 # devtools::install_github("jensenlab/primer3")
-
-
-# if (!require("BiocManager", quietly = TRUE))
-#   install.packages("BiocManager")
-# 
+# install.packages("TmCalculator")
+# install.packages("BiocManager")
 # BiocManager::install("biomaRt")
-
+# install.packages("spgs")
+# install.packages("shiny")
+# install.packages("rsconnect")
+# install.packages("shinydashboard")
 
 
 # Data processing
@@ -43,7 +38,6 @@ library(patchwork)
 library(plotly)
 
 
-
 # Bioinformatics
 library(biomaRt)
 library(spgs)
@@ -54,7 +48,6 @@ library(primer3)
 library(shinydashboard)
 library(shiny)
 library(rsconnect)
-library(shinydashboard)
 
 
 options(repos = BiocManager::repositories())
@@ -68,7 +61,7 @@ ui <- dashboardPage(
       menuItem("Analysis", tabName = "Analysis", icon = icon("th")),
       
       textInput(inputId = "primer_list", label = "Enter SNP", value = "rs1121980, rs9939609, rs7903146, rs7903146"),
-      numericInput(inputId = "primer_away", label = "Amplicant Length (bp)", value = 350),
+      numericInput(inputId = "primer_away", label = "Interval (bp)", value = 350),
       numericInput(inputId = "shift", label = "Shift (bp)", value = 1),
       sliderInput("primer_left_length", label = "Forward (bp)", min = 15,
                   max = 30, value = c(18, 25)),
@@ -76,7 +69,7 @@ ui <- dashboardPage(
                   max = 30, value = c(18, 25)),
       sliderInput("left_TM", label = "Left TM max (°C)", min = 30,
                   max = 75, value = c(55, 70)),
-      sliderInput("right_TM", "Right TM max", 1, 100, 70),
+      sliderInput("right_TM", "Right TM max (°C)", 1, 100, 70),
       sliderInput("left_hair_TM", "Left hairpin max (°C)", 1, 100, 70),
       sliderInput("right_hair_TM", "Right hairpin max (°C)", 1, 100, 70),
       sliderInput("diff", "Max difference in TM", 1, 10, 2),
