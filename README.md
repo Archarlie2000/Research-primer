@@ -13,6 +13,10 @@ https://libnano.github.io/primer3-py/api/bindings.html#primer3.bindings.calc_het
 Primer3 manual (I use it to how it calculates the functions):
 https://primer3.org/manual.html#PRIMER_MAX_HAIRPIN_TH
 
+Primer 3 in python module
+
+https://github.com/jensenlab/primer3
+
 ## Adjustable Parameters
 
 1. Mutation Upstream Length (bp)
