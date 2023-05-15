@@ -14,13 +14,13 @@
 # install.packages("rsconnect")
 # install.packages("dplyr")
 # install.packages("stringi")
-# install.packages("tidyverse")
-# install.packages("shinydashboard")
+# install.packages("tidyverse")z
 # install.packages("hexbin")
 # install.packages("patchwork")
 # install.packages("plotly")
 # install.packages("TmCalculator")
-
+# install.packages("devtools")
+# devtools::install_github("jensenlab/primer3")
 
 
 # if (!require("BiocManager", quietly = TRUE))
@@ -61,7 +61,7 @@ options(repos = BiocManager::repositories())
 
 
 ui <- dashboardPage(
-  dashboardHeader(title = "Basic dashboard"),
+  dashboardHeader(title = "Multiplexing"),
   dashboardSidebar(
     sidebarMenu(
       menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard")),
@@ -293,12 +293,6 @@ server <- function(input, output) {
       
     }
     
-    
-    
-
-    
-    
-    
     df2 <- df2[df2$`TM_left (°C)` < left_TM_max, ]
     df2 <- df2[df2$`TM_left (°C)` > left_TM_min, ]
     df2 <- df2[df2$`TM_right (°C)` < right_TM, ]
@@ -328,6 +322,7 @@ server <- function(input, output) {
     #df2 <- df2[ c(1,2,3,4,) ]
     df2 <- df2 %>% 
       mutate_if(is.numeric, round, digits = 2)
+    print(nrow(df2))
     print("Give df2")
     
     
@@ -543,12 +538,16 @@ server <- function(input, output) {
     ### Get mismatches for left primers depend on the flanking direaction
     for (i in 1:nrow(variantsTrimmed2)){
       if (variantsTrimmed2$flanking_direction[i] == "right")
-      {variantsTrimmed2$strong_mismatch_1[i] <-  get_strong1(variantsTrimmed2$forward_primer[i])
+      {variantsTrimmed2$reversed_primer[i] <-  toupper(reverseComplement(variantsTrimmed2$reversed_primer[i]))
+        variantsTrimmed2$strong_mismatch_1[i] <-  get_strong1(variantsTrimmed2$forward_primer[i])
        variantsTrimmed2$strong_mismatch_2[i] <-  get_strong2(variantsTrimmed2$forward_primer[i])
        variantsTrimmed2$medium_mismatch[i] <-  get_medium1(variantsTrimmed2$forward_primer[i])
        variantsTrimmed2$weak_mismatch[i] <-  get_weak1(variantsTrimmed2$forward_primer[i])
+  
       } else
-      {variantsTrimmed2$strong_mismatch_1[i] <-  left_flanking_get_strong1(variantsTrimmed2$forward_primer[i])
+      {
+      variantsTrimmed2$forward_primer[i] <-  toupper(reverse_chars(variantsTrimmed2$forward_primer[i]))
+      variantsTrimmed2$strong_mismatch_1[i] <-  left_flanking_get_strong1(variantsTrimmed2$forward_primer[i])
       variantsTrimmed2$strong_mismatch_2[i] <-  left_flanking_get_strong2(variantsTrimmed2$forward_primer[i])
       variantsTrimmed2$medium_mismatch[i] <-  left_flanking_get_medium1(variantsTrimmed2$forward_primer[i])
       variantsTrimmed2$weak_mismatch[i] <-  left_flanking_get_weak1(variantsTrimmed2$forward_primer[i])}
@@ -576,7 +575,6 @@ server <- function(input, output) {
                               Mismatch, 
                               flanking_direction,sep = ", ")) %>%
       as.data.frame() %>%
-      mutate(reversed_primer = toupper(reverseComplement(reversed_primer))) %>% 
       dplyr::select(c(9, 8, 5))
      
     colnames(mismatch_list) = c("Identify", "Forward", "Reversed")
