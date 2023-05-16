@@ -24,7 +24,7 @@ Section: DashBoard
 3. Shift (bp) - For each shift, the amplicant length will be shorten by 1, and a new batch of new primers will be produced
 4. Forward (bp) - Number of base pair in forward primer
 5. Reversed (bp) - Number of base pair in reverd primer
-6. Left TM max (°C) - This TM result should be identical to primer3. We assume primer concentration = 50nM, Na+ = 50nM
+6. Left TM max (°C) - This TM result should be identical to primer3 (but it is not). We assume primer concentration = 50nM, Na+ = 50nM
 7. Right TM max (°C) - Tm of reverse primer
 8. Left hairpin max (°C) - This TM result should be identical to primer3
 9. Right hairpin max (°C) - This TM result should be identical to primer3
