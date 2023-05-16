@@ -10,16 +10,19 @@
 # install.packages("dplyr")
 # install.packages("tidyverse")
 # install.packages("stringi")
+
 # install.packages("ggplot2")
 # install.packages("hexbin")
 # install.packages("patchwork")
 # install.packages("plotly")
+
 # install.packages("devtools")
 # devtools::install_github("jensenlab/primer3")
 # install.packages("TmCalculator")
 # install.packages("BiocManager")
 # BiocManager::install("biomaRt")
 # install.packages("spgs")
+
 # install.packages("shiny")
 # install.packages("rsconnect")
 # install.packages("shinydashboard")
@@ -47,7 +50,6 @@ library(primer3)
 # Deployment
 library(shinydashboard)
 library(shiny)
-library(rsconnect)
 
 
 options(repos = BiocManager::repositories())
@@ -589,9 +591,6 @@ server <- function(input, output) {
     print("rows of mismatch collected = ")
     print(nrow(mismatch_list_collected))
     
-    
-    
-    
     return(mismatch_list_collected)
   }
   
@@ -619,9 +618,14 @@ server <- function(input, output) {
                                   input$shift))
   
   
-  output$primer_table <- renderDataTable(masterTable()
-  )
-  
+  # output$primer_table <- renderDataTable(masterTable()
+  # )
+  # 
+  # 
+  # mul_Table() <- reactive(
+  #   
+  #   
+  # )
   
   output$downloadData <- downloadHandler(
     filename = function() {
@@ -632,6 +636,9 @@ server <- function(input, output) {
     }
   )
   
+  # output$multiplex_table <- renderDataTable(mul_Table()
+  # )
+  # 
 
 
   
