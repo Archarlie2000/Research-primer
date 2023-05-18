@@ -54,7 +54,6 @@ library(shiny)
 
 options(repos = BiocManager::repositories())
 
-
 ui <- dashboardPage(
   dashboardHeader(title = "Multiplexing"),
   dashboardSidebar(
@@ -314,6 +313,7 @@ server <- function(input, output) {
                        "Homodimer_L (°C)",
                        "Homodimer_R (°C)")
 
+    
     #df2 <- df2[ c(1,2,3,4,) ]
     df2 <- df2 %>% 
       mutate_if(is.numeric, round, digits = 2)
@@ -327,12 +327,14 @@ server <- function(input, output) {
   
 
   # These are the paramters used for trouble shotting
-  # primer <- "rs1121980, rs9939609"
+  
+  
+  # primer <- "rs1121980, rs9939609, rs7903146, rs7903146"
   # primer_away <- 400
   # primer_min <- 15
-  # primer_max <- 18
+  # primer_max <- 25
   # primer_left_min <- 15
-  # primer_left_max <- 18
+  # primer_left_max <- 25
   # left_TM <- 70
   # right_TM <- 70
   # left_hair_TM <- 70
@@ -341,8 +343,8 @@ server <- function(input, output) {
   # Homodimer_left_dg <- 5
   # Homodimer_right_dg <- 5
   # Heterodimer_dg <- 5
-  # shift <- 5
-  
+  # shift <- 100
+
   
   ## The main function
   mart_api <- function(primer,
@@ -541,11 +543,11 @@ server <- function(input, output) {
   
       } else
       {
-      variantsTrimmed2$forward_primer[i] <-  toupper(reverse_chars(variantsTrimmed2$forward_primer[i]))
       variantsTrimmed2$strong_mismatch_1[i] <-  left_flanking_get_strong1(variantsTrimmed2$forward_primer[i])
       variantsTrimmed2$strong_mismatch_2[i] <-  left_flanking_get_strong2(variantsTrimmed2$forward_primer[i])
       variantsTrimmed2$medium_mismatch[i] <-  left_flanking_get_medium1(variantsTrimmed2$forward_primer[i])
-      variantsTrimmed2$weak_mismatch[i] <-  left_flanking_get_weak1(variantsTrimmed2$forward_primer[i])}
+      variantsTrimmed2$weak_mismatch[i] <-  left_flanking_get_weak1(variantsTrimmed2$forward_primer[i])
+      variantsTrimmed2$forward_primer[i] <-  toupper(reverse_chars(variantsTrimmed2$forward_primer[i]))}
       }
     
     
@@ -618,14 +620,8 @@ server <- function(input, output) {
                                   input$shift))
   
   
-  # output$primer_table <- renderDataTable(masterTable()
-  # )
-  # 
-  # 
-  # mul_Table() <- reactive(
-  #   
-  #   
-  # )
+  output$primer_table <- renderDataTable(masterTable()
+  )
   
   output$downloadData <- downloadHandler(
     filename = function() {
@@ -636,11 +632,8 @@ server <- function(input, output) {
     }
   )
   
-  # output$multiplex_table <- renderDataTable(mul_Table()
-  # )
-  # 
-
-
+  
+  
   
 }
 
