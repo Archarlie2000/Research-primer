@@ -543,11 +543,11 @@ server <- function(input, output) {
   
       } else
       {
+      variantsTrimmed2$forward_primer[i] <-  toupper(reverseComplement(variantsTrimmed2$forward_primer[i]))
       variantsTrimmed2$strong_mismatch_1[i] <-  left_flanking_get_strong1(variantsTrimmed2$forward_primer[i])
       variantsTrimmed2$strong_mismatch_2[i] <-  left_flanking_get_strong2(variantsTrimmed2$forward_primer[i])
       variantsTrimmed2$medium_mismatch[i] <-  left_flanking_get_medium1(variantsTrimmed2$forward_primer[i])
-      variantsTrimmed2$weak_mismatch[i] <-  left_flanking_get_weak1(variantsTrimmed2$forward_primer[i])
-      variantsTrimmed2$forward_primer[i] <-  toupper(reverse_chars(variantsTrimmed2$forward_primer[i]))}
+      variantsTrimmed2$weak_mismatch[i] <-  left_flanking_get_weak1(variantsTrimmed2$forward_primer[i])}
       }
     
     
@@ -575,11 +575,6 @@ server <- function(input, output) {
       dplyr::select(c(9, 8, 5))
      
     colnames(mismatch_list) = c("Identify", "Forward", "Reversed")
-
-    
-  
-    ## Pre filtering with TM
-
 
     
     print("nrow(mismatch_list)")
