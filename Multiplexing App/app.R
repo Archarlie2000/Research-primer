@@ -84,14 +84,14 @@ ui <- dashboardPage(
       # First tab content
       tabItem(tabName = "dashboard",
               column(
-                DT::dataTableOutput(outputId = "primer_table"), width = 12,
+                DT::dataTableOutput(outputId = "primer_table"), 
+                width = 12
               )
       ),
-      
       # Second tab content
       tabItem(tabName = "Analysis",
               downloadButton("downloadData", "Download")
-      ) 
+      )
     )
   )
 )
@@ -102,16 +102,7 @@ server <- function(input, output) {
 
   
   ## This is random graph that is for prove of concept
-  output$distPlot <- renderPlot({
-    # generate bins based on input$bins from ui.R
-    x    <- faithful[, 2]
-    bins <- seq(min(x), max(x), length.out = input$bins + 1)
-    
-    # draw the histogram with the specified number of bins
-    hist(x, breaks = bins, col = 'darkgray', border = 'white',
-         xlab = 'Waiting time to next eruption (in mins)',
-         main = 'Histogram of waiting times')
-  })
+  output$distPlot <- renderPlot(mtcars)
   
   
   ## Get strong mismatch for the last three bp
