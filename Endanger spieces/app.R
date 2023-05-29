@@ -81,7 +81,7 @@ ui <- dashboardPage(
     )
   ),
   dashboardBody(
-    
+    tabItem(tabName = "Selection"),
     tabItems(
       # First tab content
       tabItem(tabName = "dashboard",
@@ -90,12 +90,9 @@ ui <- dashboardPage(
                 width = 12)),
       # Second tab content
       tabItem(tabName = "Analysis",
-              downloadButton("downloadData", "Download"))
-            ),
-      tabItem(tabName = "Selection",
-            DT::dataTableOutput(outputId = "multiplex_table")
-                )
-    
+              downloadButton("downloadData", "Download")
+              )
+            )
           )
 )
 
@@ -586,7 +583,7 @@ server <- function(input, output) {
   }
   
   get_multiplex <- function(df){
-    return(mtcars)
+    return(df)
   }
   
   
@@ -611,16 +608,18 @@ server <- function(input, output) {
                                    input$primer_left_length[2],
                                   input$diff,
                                   input$shift))
-
-
+  # 
+  # multiplexTable <- reactive(get_multiplex(masterTable))
+  # 
+  # 
 
   
   output$primer_table <- renderDataTable(masterTable()
   )
   
-  output$multiplex_table <- renderDataTable(get_multiplex(masterTable())
-  )
-
+  # 
+  # output$multiplex_table <- renderDataTable(multiplexTable()
+  # )
   
   output$downloadData <- downloadHandler(
     filename = function() {
