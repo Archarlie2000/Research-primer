@@ -93,7 +93,9 @@ ui <- dashboardPage(
               downloadButton("downloadData", "Download"))
             ),
       tabItem(tabName = "Selection",
-          DT::dataTableOutput(outputId = "multiplex_table")
+          
+          column(3, verbatimTextOutput('x4')),
+          DT::dataTableOutput(outputId = "multiplex_table"),
                 )
     
           )
@@ -590,14 +592,20 @@ server <- function(input, output) {
                             diff,
                             hetero){
     
+    
+    
+    s = input$primer_table_rows_selected
+    
+    df = df[s,]
+    
     print("multiplex activated")
     outputframe <- data.frame(matrix(ncol = 3, nrow = nrow(df)*nrow(df)))
     colnames(outputframe) <- c("name", "forward", "reverse")
-    
-    
-    
+
+
     # Match every forward with every reverse primer for cross checking
     k <- 0
+    
     
     print("total number = ")
     print(nrow(df)*nrow(df))
@@ -609,9 +617,9 @@ server <- function(input, output) {
         outputframe[k,3] <- df[j,3]
       }
     }
-  
+
     df2 <- outputframe
-      
+
     for (i in 1:nrow(df2)){
       df2$`TM_left (°C)`[i] = calculate_tm(df2$forward[i])
       df2$`TM_right (°C)`[i] = calculate_tm(df2$reverse[i])
@@ -619,15 +627,19 @@ server <- function(input, output) {
       df2$`Heterodimer (kcal/mol)`[i] = calculate_dimer(df2$forward[i], df2$reverse[i])$temp
     }
 
-        
+
     df2 <- df2[df2$`TM_left (°C)` < left_TM_max, ]
     df2 <- df2[df2$`TM_Diff (°C)` < diff, ]
     df2 <- df2[df2$`Heterodimer (kcal/mol)` < Heterodimer_dg, ]
-    
-    
+
+
     print("return final data frame")
-    return(df2)
     
+    
+    
+    
+    
+    return(df)
   }
   
   
@@ -664,6 +676,15 @@ server <- function(input, output) {
                                                           input$Heterodimer_dg)
   )
 
+  
+  
+  output$x4 = renderPrint({
+    s = input$primer_table_rows_selected
+    if (length(s)) {
+      cat('These rows were selected:\n\n')
+      cat(s, sep = ', ')
+    }
+  })
   
   output$downloadData <- downloadHandler(
     filename = function() {
