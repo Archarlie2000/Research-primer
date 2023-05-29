@@ -60,6 +60,7 @@ ui <- dashboardPage(
     sidebarMenu(
       menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard")),
       menuItem("Analysis", tabName = "Analysis", icon = icon("th")),
+      menuItem("Selection", tabName = "Selection", icon = icon("th")),
       
       textInput(inputId = "primer_list", label = "Enter SNP", value = "rs1121980, rs9939609, rs7903146, rs7903146"),
       numericInput(inputId = "primer_away", label = "Interval (bp)", value = 350),
@@ -80,20 +81,21 @@ ui <- dashboardPage(
     )
   ),
   dashboardBody(
+    tabItem(tabName = "Selection"),
     tabItems(
       # First tab content
       tabItem(tabName = "dashboard",
               column(
                 DT::dataTableOutput(outputId = "primer_table"), 
-                width = 12
-              )
-      ),
+                width = 12)),
+      
       # Second tab content
       tabItem(tabName = "Analysis",
               downloadButton("downloadData", "Download")
-      )
-    )
-  )
+              
+              )
+            )
+          )
 )
 
 # Define server logic required to draw a histogram
@@ -269,7 +271,7 @@ server <- function(input, output) {
       
       df2$`TM_left (°C)`[i] = calculate_tm(df$Forward[i])
       df2$`TM_right (°C)`[i] = calculate_tm(df$Reversed[i])
-      df2$`TM_Diff (°C)`[i] = df2$`TM_left (°C)`[i] - df2$`TM_right (°C)`[i]
+      df2$`TM_Diff (°C)`[i] = abs(df2$`TM_left (°C)`[i] - df2$`TM_right (°C)`[i])
       df2$`Hairpin_left (°C)`[i] = calculate_hairpin(df$Forward[i])$temp
       df2$`Hairpin_right (°C)`[i] = calculate_hairpin(df$Reversed[i])$temp
       df2$`Heterodimer (kcal/mol)`[i] = calculate_dimer(df$Forward[i], df$Reversed[i])$temp
@@ -307,7 +309,8 @@ server <- function(input, output) {
     
     #df2 <- df2[ c(1,2,3,4,) ]
     df2 <- df2 %>% 
-      mutate_if(is.numeric, round, digits = 2)
+      mutate_if(is.numeric, round, digits = 2) %>% 
+      arrange('TM diff (°C)', 'TM_L Hairpin (°C)')
     print(nrow(df2))
     print("Give df2")
     
