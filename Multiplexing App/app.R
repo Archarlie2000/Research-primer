@@ -93,7 +93,7 @@ ui <- dashboardPage(
               downloadButton("downloadData", "Download"))
             ),
       tabItem(tabName = "Selection",
-            DT::dataTableOutput(outputId = "multiplex_table")
+          DT::dataTableOutput(outputId = "multiplex_table")
                 )
     
           )
@@ -332,12 +332,12 @@ server <- function(input, output) {
   # primer_left_max <- 25
   # left_TM <- 70
   # right_TM <- 70
-  # left_hair_TM <- 70
-  # right_hair_TM <- 70
-  # diff <- 5
-  # Homodimer_left_dg <- 5
-  # Homodimer_right_dg <- 5
-  # Heterodimer_dg <- 5
+  # left_hair_TM <- 40
+  # right_hair_TM <- 40
+  # diff <- 2
+  # Homodimer_left_dg <- 2
+  # Homodimer_right_dg <- 2
+  # Heterodimer_dg <- 2
   # shift <- 1
 
   
@@ -585,8 +585,49 @@ server <- function(input, output) {
     return(mismatch_list_collected)
   }
   
-  get_multiplex <- function(df){
-    return(mtcars)
+  get_multiplex <- function(df,
+                            left_TM,
+                            diff,
+                            hetero){
+    
+    print("multiplex activated")
+    outputframe <- data.frame(matrix(ncol = 3, nrow = nrow(df)*nrow(df)))
+    colnames(outputframe) <- c("name", "forward", "reverse")
+    
+    
+    
+    # Match every forward with every reverse primer for cross checking
+    k <- 0
+    
+    print("total number = ")
+    print(nrow(df)*nrow(df))
+    for (i in 1:nrow(df)){
+      for (j in 1:nrow(df)){
+        k <- j+(i-1)*nrow(df)
+        outputframe[k,1] <- paste(df[i,1], df[j,1])
+        outputframe[k,2] <- df[i,2]
+        outputframe[k,3] <- df[j,3]
+      }
+    }
+  
+    df2 <- outputframe
+      
+    for (i in 1:nrow(df2)){
+      df2$`TM_left (°C)`[i] = calculate_tm(df2$forward[i])
+      df2$`TM_right (°C)`[i] = calculate_tm(df2$reverse[i])
+      df2$`TM_Diff (°C)`[i] = abs(df2$`TM_left (°C)`[i] - df2$`TM_right (°C)`[i])
+      df2$`Heterodimer (kcal/mol)`[i] = calculate_dimer(df2$forward[i], df2$reverse[i])$temp
+    }
+
+        
+    df2 <- df2[df2$`TM_left (°C)` < left_TM_max, ]
+    df2 <- df2[df2$`TM_Diff (°C)` < diff, ]
+    df2 <- df2[df2$`Heterodimer (kcal/mol)` < Heterodimer_dg, ]
+    
+    
+    print("return final data frame")
+    return(df2)
+    
   }
   
   
@@ -613,12 +654,14 @@ server <- function(input, output) {
                                   input$shift))
 
 
-
-  
   output$primer_table <- renderDataTable(masterTable()
   )
   
-  output$multiplex_table <- renderDataTable(get_multiplex(masterTable())
+  
+  output$multiplex_table <- renderDataTable(get_multiplex(masterTable(),
+                                                          input$left_TM[1],
+                                                          input$diff,
+                                                          input$Heterodimer_dg)
   )
 
   
@@ -630,10 +673,6 @@ server <- function(input, output) {
       write.csv(masterTable(), file, row.names = FALSE)
     }
   )
-  
-  
-  
-  
 }
 
 # Run the application 
