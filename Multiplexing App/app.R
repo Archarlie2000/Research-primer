@@ -636,9 +636,36 @@ server <- function(input, output) {
     print("return final data frame")
     
     
+    outputframe2 <- data.frame(matrix(ncol = 25, nrow = 500))
+    colnames(outputframe2) <- c("n1", "fw1", "rv1",
+                               "n2", "fw2", "rv2",
+                               "n3", "fw3", "rv3",
+                               "n4", "fw4", "rv4",
+                               "n5", "fw5", "rv5",
+                               "n6", "fw6", "rv6",
+                               "n7", "fw7", "rv7",
+                               "n8", "fw8", "rv8", "score")
     
     
+    # Match every forward with every reverse primer for cross checking
+    k <- 0
     
+    
+    print("total number = ")
+    print(nrow(df)*nrow(df))
+    
+    for (i in 1:nrow(df)){
+      for (j in 1:nrow(df)){
+        for (k in 1:nrow(df)){
+          for (l in 1:nrows(df)){
+            
+          }
+        }
+      }
+    }
+      
+      
+      
     return(df)
   }
   
