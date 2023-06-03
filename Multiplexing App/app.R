@@ -95,7 +95,7 @@ ui <- dashboardPage(
       tabItem(tabName = "Selection",
           
           column(3, verbatimTextOutput('x4')),
-          DT::dataTableOutput(outputId = "multiplex_table"),
+          # DT::dataTableOutput(outputId = "multiplex_table"),
                 )
     
           )
@@ -407,7 +407,7 @@ server <- function(input, output) {
     
     print("Start big loop")
     
-    for (primer_away in primer_away:(primer_away+shift)){
+    for (primer_away in primer_away:(primer_away + shift)){
       print("Amplicant distance")
       print(primer_away)
     
@@ -479,16 +479,7 @@ server <- function(input, output) {
                                      names_to = "left_flanking_Right_side",
                                      values_to = "left_flanking_rightPrimers")
     
-    
-    variantsTrimmed2 <- cbind(variantsTrimmed$snpID,
-                              variantsTrimmed$sequence,
-                              variantsTrimmed_temp_1, 
-                              variantsTrimmed_temp_2)
-    
-    colnames(variantsTrimmed2)[1] <- "snpID"
-    colnames(variantsTrimmed2)[2] <- "sequence"
-    
-    
+
 
     ## combine left and flanking into a longer list since 
     ## previous one is not split in the right way
@@ -502,10 +493,10 @@ server <- function(input, output) {
                               )
     
     vt_partition_2 <- cbind(variantsTrimmed_temp_2$snpID,
-                            variantsTrimmed_temp_2$left_flanking_Left_side,
-                            variantsTrimmed_temp_2$left_flanking_leftPrimers,
                             variantsTrimmed_temp_2$left_flanking_Right_side,
                             variantsTrimmed_temp_2$left_flanking_rightPrimers,
+                            variantsTrimmed_temp_2$left_flanking_Left_side,
+                            variantsTrimmed_temp_2$left_flanking_leftPrimers,
                             "left")
     
     variantsTrimmed2 <- rbind(vt_partition_1,vt_partition_2) %>% data.frame()
