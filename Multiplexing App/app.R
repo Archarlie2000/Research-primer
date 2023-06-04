@@ -125,13 +125,9 @@ server <- function(input, output) {
     
     print("R get filter activated")
     df2 <- df
-    
-    
-    
-    
-    {
-    start_time <- Sys.time()  
-    df2$`TM_left (°C)` <- sapply(df$Forward, calculate_tm)
+
+    #start_time <- Sys.time()  
+    df2$`TM_left (°C)` <- sapply(df2$Forward, calculate_tm)
     df2 <- df2[df2$`TM_left (°C)` < left_TM_max, ]
     df2 <- df2[df2$`TM_left (°C)` > left_TM_min, ]
     
@@ -152,22 +148,12 @@ server <- function(input, output) {
     
     df2$`Homodimer_Right (°C)` <- sapply(df2$Reversed, function(x) calculate_homodimer(x)$temp)
     df2 <- df2[df2$`Homodimer_Right (°C)` < Homodimer_right_dg, ]
-    # End the timer
-    
-    for (i in 1:nrow(df)){
-      
+
+    for (i in 1:nrow(df2)){
       df2$`Heterodimer (°C)`[i] = calculate_dimer(df2$Forward[i], df2$Reversed[i])$temp
     }
     df2 <- df2[df2$`Heterodimer (°C)` < Heterodimer_dg, ]
-    
-    end_time <- Sys.time()
-    
-    # Calculate the elapsed time
-    elapsed_time <- end_time - start_time
-    
-    # Print the elapsed time
-    print(elapsed_time)
-    }
+
     
 
     
@@ -211,8 +197,8 @@ server <- function(input, output) {
 
   # These are the paramters used for trouble shotting
   
-  # primer <- "rs1121980, rs9939609, rs7903146, rs7903146"
-  # primer_away <- 425
+  # primer <- "rs1121980, rs9939609, rs7903146, rs7903146, rs4402960"
+  # primer_away <- 450
   # primer_min <- 18
   # primer_max <- 25
   # primer_left_min <- 18
@@ -225,9 +211,9 @@ server <- function(input, output) {
   # Homodimer_left_dg <- 20
   # Homodimer_right_dg <- 20
   # Heterodimer_dg <- 5
-  # shift <- 100
-  # left_TM_max = 63
-  # left_TM_min = 60
+  # shift <- 1
+  # left_TM_max = 68
+  # left_TM_min = 50
 
   
   ## The main function
