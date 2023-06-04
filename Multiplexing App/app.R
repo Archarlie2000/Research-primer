@@ -71,14 +71,14 @@ ui <- dashboardPage(
                   max = 30, value = c(18, 25)),
       sliderInput("primer_right_length", label = "Reverse (bp)", min = 15,
                   max = 30, value = c(18, 25)),
-      sliderInput("left_TM", label = "Left TM max (°C)", min = 30,
+      sliderInput("left_TM", label = "FW TM max (°C)", min = 30,
                   max = 75, value = c(55, 70)),
-      sliderInput("right_TM", "Right TM max (°C)", 1, 100, 70),
-      sliderInput("left_hair_TM", "Left hairpin max (°C)", 1, 100, 70),
-      sliderInput("right_hair_TM", "Right hairpin max (°C)", 1, 100, 70),
+      sliderInput("right_TM", "RV TM max (°C)", 1, 100, 70),
+      sliderInput("left_hair_TM", "FW hairpin max (°C)", 1, 100, 70),
+      sliderInput("right_hair_TM", "RV hairpin max (°C)", 1, 100, 70),
       sliderInput("diff", "Max difference in TM", 1, 10, 2),
-      sliderInput("Homodimer_left_dg", "Homodimer left (°C)", 1, 70,40),
-      sliderInput("Homodimer_right_dg", "Homodimer right (°C)", 1, 70, 40),
+      sliderInput("Homodimer_left_dg", "FW Homodimer (°C)", 1, 70,40),
+      sliderInput("Homodimer_right_dg", "RV Homodimer (°C)", 1, 70, 40),
       sliderInput("Heterodimer_dg", "Heterodimer (°C)", 1, 70, 40)
     )
   ),
@@ -128,31 +128,59 @@ server <- function(input, output) {
     
     
     
-    for (i in 1:nrow(df)){
-      
-      df2$`TM_left (°C)`[i] = calculate_tm(df$Forward[i])
-      df2$`TM_right (°C)`[i] = calculate_tm(df$Reversed[i])
-      df2$`TM_Diff (°C)`[i] = abs(df2$`TM_left (°C)`[i] - df2$`TM_right (°C)`[i])
-      df2$`Hairpin_left (°C)`[i] = calculate_hairpin(df$Forward[i])$temp
-      df2$`Hairpin_right (°C)`[i] = calculate_hairpin(df$Reversed[i])$temp
-      df2$`Heterodimer (kcal/mol)`[i] = calculate_dimer(df$Forward[i], df$Reversed[i])$temp
-      df2$`Homodimer_Left (kcal/mol)`[i] = calculate_homodimer(df$Forward[i])$temp
-      df2$`Homodimer_Right (kcal/mol)`[i] = calculate_homodimer(df$Reversed[i])$temp
-      
-    }
     
+    {
+    start_time <- Sys.time()  
+    df2$`TM_left (°C)` <- sapply(df$Forward, calculate_tm)
     df2 <- df2[df2$`TM_left (°C)` < left_TM_max, ]
     df2 <- df2[df2$`TM_left (°C)` > left_TM_min, ]
+    
+    df2$`TM_right (°C)` <- sapply(df2$Reversed, calculate_tm)
     df2 <- df2[df2$`TM_right (°C)` < right_TM, ]
+    
+    df2$`TM_Diff (°C)` <- abs(df2$`TM_left (°C)` - df2$`TM_right (°C)`)
     df2 <- df2[df2$`TM_Diff (°C)` < diff, ]
+    
+    df2$`Hairpin_left (°C)` <- sapply(df2$Forward, function(x) calculate_hairpin(x)$temp)
     df2 <- df2[df2$`Hairpin_left (°C)` < left_hair_TM, ]
+    
+    df2$`Hairpin_right (°C)` <- sapply(df2$Reversed, function(x) calculate_hairpin(x)$temp)
     df2 <- df2[df2$`Hairpin_right (°C)` < right_hair_TM, ]
-    df2 <- df2[df2$`Heterodimer (kcal/mol)` < Heterodimer_dg, ]
-    #df2 <- df2[df2$`Heterodimer (kcal/mol)` > 0, ]
-    df2 <- df2[df2$`Homodimer_Left (kcal/mol)` < Homodimer_left_dg, ]
-    #df2 <- df2[df2$`Homodimer_Left (kcal/mol)` > 0, ]
-    df2 <- df2[df2$`Homodimer_Right (kcal/mol)` < Homodimer_right_dg, ]
-    #df2 <- df2[df2$`Homodimer_Right (kcal/mol)` > 0, ]
+    
+    df2$`Homodimer_Left (°C)` <- sapply(df2$Forward, function(x) calculate_homodimer(x)$temp)
+    df2 <- df2[df2$`Homodimer_Left (°C)` < Homodimer_left_dg, ]
+    
+    df2$`Homodimer_Right (°C)` <- sapply(df2$Reversed, function(x) calculate_homodimer(x)$temp)
+    df2 <- df2[df2$`Homodimer_Right (°C)` < Homodimer_right_dg, ]
+    # End the timer
+    
+    for (i in 1:nrow(df)){
+      
+      df2$`Heterodimer (°C)`[i] = calculate_dimer(df2$Forward[i], df2$Reversed[i])$temp
+    }
+    df2 <- df2[df2$`Heterodimer (°C)` < Heterodimer_dg, ]
+    
+    end_time <- Sys.time()
+    
+    # Calculate the elapsed time
+    elapsed_time <- end_time - start_time
+    
+    # Print the elapsed time
+    print(elapsed_time)
+    }
+    
+
+    
+    # df2 <- df2[df2$`TM_left (°C)` < left_TM_max, ]
+    # df2 <- df2[df2$`TM_left (°C)` > left_TM_min, ]
+    # df2 <- df2[df2$`TM_right (°C)` < right_TM, ]
+    # df2 <- df2[df2$`TM_Diff (°C)` < diff, ]
+    # df2 <- df2[df2$`Hairpin_left (°C)` < left_hair_TM, ]
+    # df2 <- df2[df2$`Hairpin_right (°C)` < right_hair_TM, ]
+    # df2 <- df2[df2$`Heterodimer (°C)` < Heterodimer_dg, ]
+    # df2 <- df2[df2$`Homodimer_Left (°C)` < Homodimer_left_dg, ]
+    # df2 <- df2[df2$`Homodimer_Right (°C)` < Homodimer_right_dg, ]
+
 
 
     colnames(df2) <- c("Identidy",
@@ -163,9 +191,9 @@ server <- function(input, output) {
                        "TM diff (°C)",
                        "TM_L Hairpin (°C)",
                        "TM_R Hairpin (°C)",
-                       "Heterodimer (°C)",
                        "Homodimer_L (°C)",
-                       "Homodimer_R (°C)")
+                       "Homodimer_R (°C)",
+                       "Heterodimer (°C)")
 
     
     #df2 <- df2[ c(1,2,3,4,) ]
@@ -183,22 +211,23 @@ server <- function(input, output) {
 
   # These are the paramters used for trouble shotting
   
-  
   # primer <- "rs1121980, rs9939609, rs7903146, rs7903146"
-  # primer_away <- 400
-  # primer_min <- 15
+  # primer_away <- 425
+  # primer_min <- 18
   # primer_max <- 25
-  # primer_left_min <- 15
+  # primer_left_min <- 18
   # primer_left_max <- 25
   # left_TM <- 70
   # right_TM <- 70
-  # left_hair_TM <- 40
-  # right_hair_TM <- 40
+  # left_hair_TM <- 35
+  # right_hair_TM <- 35
   # diff <- 2
-  # Homodimer_left_dg <- 2
-  # Homodimer_right_dg <- 2
-  # Heterodimer_dg <- 2
-  # shift <- 1
+  # Homodimer_left_dg <- 20
+  # Homodimer_right_dg <- 20
+  # Heterodimer_dg <- 5
+  # shift <- 100
+  # left_TM_max = 63
+  # left_TM_min = 60
 
   
   ## The main function

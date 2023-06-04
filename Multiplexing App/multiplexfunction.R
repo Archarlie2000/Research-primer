@@ -44,7 +44,7 @@ combinations_df <- as.data.frame(combinations)
 
 
 
-
+combination <- expand.grid(append(list_1, list_2))
 
 #######################################
 

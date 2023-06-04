@@ -23,8 +23,8 @@ get_list <- function(i, j){
 
 multiplex(get_list(1,2), get_list(2,2))
 
-list_1 = get_list(1,2)
-list_2 = get_list(2,2)
+list_1 = append(list(unique(get_list(1,2)[[1]])), list(unique(get_list(1,3)[[1]])))
+list_2 = append(list(unique(get_list(2,2)[[1]])), list(unique(get_list(2,3)[[1]])))
 
 
 multiplex = function(list_1, list_2){
@@ -33,7 +33,8 @@ multiplex = function(list_1, list_2){
     combination <- expand.grid(append(list_1, list_2))
     indices <- evaluation(combination)
   
-    output1 <- append(list_1[indices], list_2[indices])
+    output1 <- append(list(list_1[[1]][indices[1][[1]]]),
+                      list(list_2[[1]][indices[2][[1]]]))
   
     output2 <- get_list(level,2)
   
@@ -84,6 +85,12 @@ evaluation <- function(combinations){
   
   result_matrix <- as.data.frame(result_matrix)
   row_indices <- which(apply(result_matrix, 1, function(row) all(row < 5)))
-  
+  # indices_1 <- unique(ceiling(row_indices/len_1))
+  # indices_2 <- unique(sapply(row_indices, 
+  #                            function(x) if(x%%len_2 == 0){return(len_2)}
+  #                            else
+  #                              {return(x%%len_2)} ))
+  # print(indices_1)
+  # print(indices_2)
   return(row_indices)
 }
