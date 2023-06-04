@@ -125,7 +125,8 @@ server <- function(input, output) {
     
     print("R get filter activated")
     df2 <- df
-
+    
+    
     #start_time <- Sys.time()  
     df2$`TM_left (°C)` <- sapply(df2$Forward, calculate_tm)
     df2 <- df2[df2$`TM_left (°C)` < left_TM_max, ]
@@ -169,15 +170,15 @@ server <- function(input, output) {
 
 
 
-    colnames(df2) <- c("Identidy",
+    colnames(df2) <- c("Identity",
                        "Forward (bp)",
                        "Reversed (bp)",
-                       "TM_L (°C)",
+                       "TM_F (°C)",
                        "TM_R (°C)",
                        "TM diff (°C)",
-                       "TM_L Hairpin (°C)",
+                       "TM_F Hairpin (°C)",
                        "TM_R Hairpin (°C)",
-                       "Homodimer_L (°C)",
+                       "Homodimer_F (°C)",
                        "Homodimer_R (°C)",
                        "Heterodimer (°C)")
 
@@ -189,6 +190,7 @@ server <- function(input, output) {
     print(nrow(df2))
     print("Give df2")
     
+    # write.csv(df2, "metadata.csv")
     
     
     return(df2)
@@ -196,7 +198,7 @@ server <- function(input, output) {
   
 
   # These are the paramters used for trouble shotting
-  
+
   # primer <- "rs1121980, rs9939609, rs7903146, rs7903146, rs4402960"
   # primer_away <- 450
   # primer_min <- 18
@@ -208,12 +210,12 @@ server <- function(input, output) {
   # left_hair_TM <- 35
   # right_hair_TM <- 35
   # diff <- 2
-  # Homodimer_left_dg <- 20
-  # Homodimer_right_dg <- 20
-  # Heterodimer_dg <- 5
-  # shift <- 1
+  # Homodimer_left_dg <- 30
+  # Homodimer_right_dg <- 30
+  # Heterodimer_dg <- 10
+  # shift <- 150
   # left_TM_max = 68
-  # left_TM_min = 50
+  # left_TM_min = 60
 
   
   ## The main function
@@ -426,11 +428,11 @@ server <- function(input, output) {
         values_to = "primer",
         values_drop_na = TRUE) %>% 
       filter(primer != "N") %>% 
-      mutate(Identidy = snp) %>%
+      mutate(identity = paste(snp, flanking_direction)) %>%
       as.data.frame() %>%
       dplyr::select(c(9, 8, 5))
      
-    colnames(mismatch_list) = c("Identify", "Forward", "Reversed")
+    colnames(mismatch_list) = c("identity", "Forward", "Reversed")
 
     
     print("nrow(mismatch_list)")
@@ -443,6 +445,8 @@ server <- function(input, output) {
     
     print("rows of mismatch collected = ")
     print(nrow(mismatch_list_collected))
+    
+    # df <- mismatch_list_collected
     
     return(mismatch_list_collected)
   }
@@ -480,50 +484,7 @@ server <- function(input, output) {
 
     df2 <- outputframe
 
-    for (i in 1:nrow(df2)){
-      df2$`TM_left (°C)`[i] = calculate_tm(df2$forward[i])
-      df2$`TM_right (°C)`[i] = calculate_tm(df2$reverse[i])
-      df2$`TM_Diff (°C)`[i] = abs(df2$`TM_left (°C)`[i] - df2$`TM_right (°C)`[i])
-      df2$`Heterodimer (kcal/mol)`[i] = calculate_dimer(df2$forward[i], df2$reverse[i])$temp
-    }
 
-
-    df2 <- df2[df2$`TM_left (°C)` < left_TM_max, ]
-    df2 <- df2[df2$`TM_Diff (°C)` < diff, ]
-    df2 <- df2[df2$`Heterodimer (kcal/mol)` < Heterodimer_dg, ]
-
-
-    print("return final data frame")
-    
-    
-    outputframe2 <- data.frame(matrix(ncol = 25, nrow = 500))
-    colnames(outputframe2) <- c("n1", "fw1", "rv1",
-                               "n2", "fw2", "rv2",
-                               "n3", "fw3", "rv3",
-                               "n4", "fw4", "rv4",
-                               "n5", "fw5", "rv5",
-                               "n6", "fw6", "rv6",
-                               "n7", "fw7", "rv7",
-                               "n8", "fw8", "rv8", "score")
-    
-    
-    # Match every forward with every reverse primer for cross checking
-    k <- 0
-    
-    
-    print("total number = ")
-    print(nrow(df)*nrow(df))
-    
-    for (i in 1:nrow(df)){
-      for (j in 1:nrow(df)){
-        for (k in 1:nrow(df)){
-          for (l in 1:nrows(df)){
-            
-          }
-        }
-      }
-    }
-      
       
       
     return(df)
