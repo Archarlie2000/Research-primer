@@ -1,17 +1,25 @@
 
 
 top <- 10
-threshold = 3
+threshold = 20
 level = 2
 final = matrix()
 
 
+
+df2 <- read.csv("metadata.csv")[,-1]
+
+
+df2$direction <- sapply(strsplit(as.character(df2$Identity), " "), function(x) x[[2]])
+df2$Identity <- sapply(strsplit(as.character(df2$Identity), " "), function(x) x[[1]])
+
+
 df <- df2 %>% 
-  group_by(Identify) %>%
+  group_by(Identity) %>%
   slice(1:top)%>%
   ungroup()
 
-nested_tables <- split(df, df$Identify)
+nested_tables <- split(df, df$Identity)
 le <- length(nested_tables)
 
 
@@ -21,10 +29,17 @@ get_list <- function(i, j){
   return(k)
 }
 
-multiplex(get_list(1,2), get_list(2,2))
+# multiplex(get_list(1,2), get_list(2,2))
 
-list_1 = append(list(unique(get_list(1,2)[[1]])), list(unique(get_list(1,3)[[1]])))
-list_2 = append(list(unique(get_list(2,2)[[1]])), list(unique(get_list(2,3)[[1]])))
+list_1 = c(list(unique(get_list(1,2)[[1]])), 
+           list(unique(get_list(1,3)[[1]])),
+           list(unique(get_list(2,2)[[1]])),
+           list(unique(get_list(2,3)[[1]])))
+
+list_2 = c(list(unique(get_list(3,2)[[1]])), 
+           list(unique(get_list(3,3)[[1]])),
+           list(unique(get_list(4,2)[[1]])),
+           list(unique(get_list(4,3)[[1]])))
 
 
 multiplex = function(list_1, list_2){
@@ -49,39 +64,41 @@ multiplex = function(list_1, list_2){
 }
 
 
-evaluation <- function(combinations){
-  num_rows <- nrow(combinations)
-  num_cols <- ncol(combinations)
+evaluation <- function(combination){
+  num_rows <- nrow(combination)
+  num_cols <- ncol(combination)
   permutation <- factorial(num_cols)/factorial(num_cols-2)/2
   result_matrix <- matrix(0, nrow = num_rows, ncol = permutation)
 
   
   
   # Iterate over each row of the matrix
+  start_time <- Sys.time()
   for (i in 1:num_rows) {
-    row <- combinations[i, ]
-    print(paste("i is", i))
-    # Convert elements of the row to strings
+    row <- combination[i, ]
     row <- lapply(row, as.character)
     clock = 0
-    # Iterate over each item in the row
+    #print(paste("i is", i))
+    
     for (j in 1:num_cols) {
-      # Compare the item with every other item in the row
-      # print(paste("j is", j))
-      
+
+      #print(paste("j is", j))
       if (max(result_matrix[i, ]) <= threshold){
-        for (k in 1:num_cols) {
-          # print(paste("k is", k))
-          if (max(result_matrix[i, ]) <= threshold){
-            if (k > j) {
-              clock = clock + 1 
-              result_matrix[i, clock] <- calculate_dimer(row[[j]], row[[k]])$temp
-            }
+        for (k in j:num_cols) {
+          if (k>j){
+            #print(paste("k is", k))
+            clock = clock + 1
+            #print(paste("Order ----------- ", clock))
+            #print(row[[j]])
+            #print(row[[k]])
+            result_matrix[i, clock] <- calculate_dimer(row[[j]], row[[k]])$temp
           }
         }
       }
     }
   }
+  end_time <- Sys.time()
+  print(elapsed_time <- end_time - start_time)
   
   result_matrix <- as.data.frame(result_matrix)
   row_indices <- which(apply(result_matrix, 1, function(row) all(row < 5)))

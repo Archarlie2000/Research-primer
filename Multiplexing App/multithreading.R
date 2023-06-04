@@ -34,7 +34,7 @@ evaluation <- function(combination){
     for (j in 1:num_cols) {
       
       #print(paste("j is", j))
-      if (1){
+      if (max(result_matrix[i, ]) <= threshold){
         for (k in j:num_cols) {
           if (k>j){
             clock = clock + 1
@@ -63,7 +63,7 @@ evaluation <- function(combination){
 
 matrix_data <- combination
 
-n <- 10
+n <- 12
 
 # Calculate the number of rows in each part
 rows_per_part <- ceiling(nrow(matrix_data) / n)
@@ -87,7 +87,6 @@ for (i in 1:n) {
   start_time <- Sys.time()
   
   
-  
   results <- foreach(i = divided_matrix) %dopar% {
     evaluation(i)
   }
@@ -98,8 +97,7 @@ for (i in 1:n) {
   #combined_results <- unlist(results)
 
   end_time <- Sys.time()
-  elapsed_time <- end_time - start_time
-  print(elapsed_time)
+  print(elapsed_time <- end_time - start_time)
 
 }
 
