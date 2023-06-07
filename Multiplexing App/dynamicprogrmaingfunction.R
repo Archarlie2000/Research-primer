@@ -1,10 +1,11 @@
 
 
-top <- 3
+
+
+top <- 10
 threshold =  10
 level = 2
 final = list()
-
 
 
 df2 <- read.csv("metadata.csv")[,-1]
@@ -28,6 +29,7 @@ get_list <- function(i, j){
   k <- as.list(strsplit(k, " "))
   return(k)
 }
+
 
 
 
