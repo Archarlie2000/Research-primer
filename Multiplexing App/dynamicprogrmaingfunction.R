@@ -102,7 +102,7 @@ evaluation <- function(combination){
   
   result_matrix <- as.data.frame(result_matrix)
   row_indices <- which(apply(result_matrix, 1, 
-                             function(row) all(row < threshold)))
+                             function(row) all(row != 0)))
   # indices_1 <- unique(ceiling(row_indices/len_1))
   # indices_2 <- unique(sapply(row_indices, 
   #                            function(x) if(x%%len_2 == 0){return(len_2)}

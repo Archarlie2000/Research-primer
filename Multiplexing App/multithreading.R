@@ -102,3 +102,23 @@ for (i in 1:n) {
 }
 
 
+remove_rows_with_threshold <- function(data, threshold) {
+  filtered_data <- data %>%
+    filter(!apply(. > threshold | . == 0, 1, any))
+  
+  return(filtered_data)
+}
+
+
+# row_indices <- which(apply(combined_matrix, 1, 
+#                            function(row) all(row != 0)))
+
+cleaned_df <- remove_rows_with_threshold(combined_matrix, 5)
+
+
+
+
+
+
+
+
