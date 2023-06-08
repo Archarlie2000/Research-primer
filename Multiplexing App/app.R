@@ -33,6 +33,8 @@ library(DT)
 library(dplyr)
 library(tidyverse)
 library(stringi)
+library(stringr)
+
 
 #graphing
 library(ggplot2)
@@ -50,8 +52,6 @@ library(primer3)
 # Deployment
 library(shinydashboard)
 library(shiny)
-
-
 
 source("functions.R")
 
@@ -73,13 +73,13 @@ ui <- dashboardPage(
       sliderInput("primer_right_length", label = "Reverse (bp)", min = 15,
                   max = 30, value = c(18, 25)),
       sliderInput("left_TM", label = "FW TM max (°C)", min = 30,
-                  max = 75, value = c(55, 60)),
-      sliderInput("right_TM", "RV TM max (°C)", 1, 100, 60),
-      sliderInput("left_hair_TM", "FW hairpin max (°C)", 1, 100, 50),
-      sliderInput("right_hair_TM", "RV hairpin max (°C)", 1, 100, 50),
+                  max = 75, value = c(55, 68)),
+      sliderInput("right_TM", "RV TM max (°C)", 1, 100, 70),
+      sliderInput("left_hair_TM", "FW hairpin max (°C)", 1, 100, 35),
+      sliderInput("right_hair_TM", "RV hairpin max (°C)", 1, 100, 35),
       sliderInput("diff", "Max difference in TM", 1, 10, 2),
-      sliderInput("Homodimer_left_dg", "FW Homodimer (°C)", 1, 70,40),
-      sliderInput("Homodimer_right_dg", "RV Homodimer (°C)", 1, 70, 40),
+      sliderInput("Homodimer_left_dg", "FW Homodimer (°C)", 1, 70, 30),
+      sliderInput("Homodimer_right_dg", "RV Homodimer (°C)", 1, 70, 30),
       sliderInput("Heterodimer_dg", "Heterodimer (°C)", 1, 70, 40)
     )
   ),
@@ -97,8 +97,8 @@ ui <- dashboardPage(
             ),
       tabItem(tabName = "Selection",
           
-          column(3, verbatimTextOutput('x4')),
-          #DT::dataTableOutput(outputId = "multiplex_table"),
+          #column(3, verbatimTextOutput('x4')),
+          DT::dataTableOutput(outputId = "multiplex_table"),
                 )
           )
 )
@@ -195,7 +195,7 @@ server <- function(input, output) {
   # Homodimer_left_dg <- 30
   # Homodimer_right_dg <- 30
   # Heterodimer_dg <- 10
-  # shift <- 150
+  # shift <- 50
   # left_TM_max = 68
   # left_TM_min = 55
 
@@ -263,12 +263,12 @@ server <- function(input, output) {
     
     print("Start big loop")
     
-    clock = 1
+    clock = 0
     for (primer_away in primer_away:(primer_away + shift)){
-      print("Iteration")
+      
+      print(paste("Iteration ----- ", clock/shift *100, "%", sep = ""))
       clock = (clock +1)
-      print(paste(round((clock +1)/2,2), "%", sep = ""))
-    
+      
     # add columns for the substrings leading up to and including the variant site
     # produce right flanking left primer
     for (i in primer_left_min:primer_left_max) {
@@ -418,8 +418,8 @@ server <- function(input, output) {
     colnames(mismatch_list) = c("identity", "Forward", "Reversed")
 
     
-    print("nrow(mismatch_list)")
-    print(nrow(mismatch_list))
+    # print("nrow(mismatch_list)")
+    # print(nrow(mismatch_list))
     
     
     mismatch_list_collected <- rbind(mismatch_list_collected, mismatch_list)
@@ -438,7 +438,6 @@ server <- function(input, output) {
                             threshold){
     
     top <- 10
-    threshold =  30
     level = 2
     final = list()
     
@@ -451,9 +450,18 @@ server <- function(input, output) {
       ungroup()
     
     nested_tables <- split(df, df$Identity)
+    
     levels <- length(nested_tables) * 2
     
+    
     list_3 <- c()
+    
+    
+    get_list <- function(i, j){
+      k <- str_flatten(nested_tables[[i]][[j]], collapse = " ")
+      k <- as.list(strsplit(k, " "))
+      return(k)
+    }
     
     for (i in 1:length(nested_tables)){
       list_3 <- c(list_3, 
@@ -461,15 +469,46 @@ server <- function(input, output) {
                   list(unique(get_list(i,3)[[1]])))
     }
     
-    # list_3 = c(list(unique(get_list(1,2)[[1]])), 
-    #            list(unique(get_list(1,3)[[1]])),
-    #            list(unique(get_list(2,2)[[1]])),
-    #            list(unique(get_list(2,3)[[1]])),
-    #            list(unique(get_list(3,2)[[1]])), 
-    #            list(unique(get_list(3,3)[[1]])),
-    #            list(unique(get_list(4,2)[[1]])),
-    #            list(unique(get_list(4,3)[[1]])))
-    
+    evaluation_new <- function(combination, len_1, len_2){
+      num_rows <- nrow(combination)
+      num_cols <- ncol(combination)
+      result_matrix <- matrix(0, nrow = num_rows, ncol = num_cols-1)
+      
+      
+      # Iterate over each row of the matrix
+      for (i in 1:num_rows) {
+        row <- combination[i, ]
+        row <- lapply(row, as.character)
+        clock = 0
+        
+        print(paste("i is", i))
+        for (j in 1:(num_cols-1)) {
+          
+          if (max(result_matrix[i, ]) <= threshold){
+            clock = clock + 1
+            result_matrix[i, clock] <- calculate_dimer(row[[j]], row[[num_cols]])$temp
+          }
+        }
+      }
+      
+      result_matrix <- as.data.frame(result_matrix)
+      row_indices <- which(apply(result_matrix, 1, function(row) all(row < threshold)))
+      #print(row_indices)
+      indices_1 <- unique(ceiling(row_indices/len_1))
+      if (len_1 == 1){
+        indices_1 <- 1
+      }
+      indices_2 <- unique(sapply(row_indices,
+                                 function(x) if(x%%len_2 == 0){return(len_2)}
+                                 else
+                                 {return(x%%len_2)} ))
+      #print(indices_1)
+      #print(indices_2)
+      good_slection = c(list(indices_1), list(indices_2))
+      return(good_slection)
+    }
+
+    print("Bear")
     
     arranged_list <- list_3[order(sapply(list_3, length), 
                                   decreasing = FALSE)]

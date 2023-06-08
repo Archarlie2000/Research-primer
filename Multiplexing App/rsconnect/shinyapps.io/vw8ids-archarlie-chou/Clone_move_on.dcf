@@ -5,10 +5,10 @@ account: vw8ids-archarlie-chou
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 8936538
-bundleId: 7299137
+bundleId: 7322281
 url: https://vw8ids-archarlie-chou.shinyapps.io/Clone_move_on/
-when: 1685756924.02315
-lastSyncTime: 1685756924.02316
+when: 1686255277.0114
+lastSyncTime: 1686255277.01149
 asMultiple: FALSE
 asStatic: FALSE
-ignoredFiles: getdata.py|getfilter.py
+ignoredFiles: dynamicprogrmaingfunction.R|getdata.py|getfilter.py|metadata.csv|multiplexfunction.R|multithreading.R
