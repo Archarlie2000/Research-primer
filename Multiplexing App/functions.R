@@ -178,3 +178,11 @@ evaluation_new <- function(combination, len_1, len_2){
   good_slection = c(list(indices_1), list(indices_2))
   return(good_slection)
 }
+
+
+
+get_list <- function(i, j){
+  k <- str_flatten(nested_tables[[i]][[j]], collapse = " ")
+  k <- as.list(strsplit(k, " "))
+  return(k)
+}

@@ -65,19 +65,18 @@ ui <- dashboardPage(
       menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard")),
       menuItem("Analysis", tabName = "Analysis", icon = icon("th")),
       menuItem("Selection", tabName = "Selection", icon = icon("th")),
-      
       textInput(inputId = "primer_list", label = "Enter SNP", value = "rs1121980, rs9939609, rs7903146, rs4402960"),
-      numericInput(inputId = "primer_away", label = "Interval (bp)", value = 350),
-      numericInput(inputId = "shift", label = "Shift (bp)", value = 0),
+      numericInput(inputId = "primer_away", label = "Interval (bp)", value = 450),
+      numericInput(inputId = "shift", label = "Shift (bp)", value = 150),
       sliderInput("primer_left_length", label = "Forward (bp)", min = 15,
                   max = 30, value = c(18, 25)),
       sliderInput("primer_right_length", label = "Reverse (bp)", min = 15,
                   max = 30, value = c(18, 25)),
       sliderInput("left_TM", label = "FW TM max (°C)", min = 30,
-                  max = 75, value = c(55, 70)),
-      sliderInput("right_TM", "RV TM max (°C)", 1, 100, 70),
-      sliderInput("left_hair_TM", "FW hairpin max (°C)", 1, 100, 70),
-      sliderInput("right_hair_TM", "RV hairpin max (°C)", 1, 100, 70),
+                  max = 75, value = c(55, 60)),
+      sliderInput("right_TM", "RV TM max (°C)", 1, 100, 60),
+      sliderInput("left_hair_TM", "FW hairpin max (°C)", 1, 100, 50),
+      sliderInput("right_hair_TM", "RV hairpin max (°C)", 1, 100, 50),
       sliderInput("diff", "Max difference in TM", 1, 10, 2),
       sliderInput("Homodimer_left_dg", "FW Homodimer (°C)", 1, 70,40),
       sliderInput("Homodimer_right_dg", "RV Homodimer (°C)", 1, 70, 40),
@@ -99,7 +98,7 @@ ui <- dashboardPage(
       tabItem(tabName = "Selection",
           
           column(3, verbatimTextOutput('x4')),
-          # DT::dataTableOutput(outputId = "multiplex_table"),
+          #DT::dataTableOutput(outputId = "multiplex_table"),
                 )
           )
 )
@@ -153,24 +152,6 @@ server <- function(input, output) {
     df2$`Homodimer_Right (°C)` <- sapply(df2$Reversed, function(x) calculate_homodimer(x)$temp)
     df2 <- df2[df2$`Homodimer_Right (°C)` < Homodimer_right_dg, ]
 
-    for (i in 1:nrow(df2)){
-      df2$`Heterodimer (°C)`[i] = calculate_dimer(df2$Forward[i], df2$Reversed[i])$temp
-    }
-    df2 <- df2[df2$`Heterodimer (°C)` < Heterodimer_dg, ]
-
-    
-
-    
-    # df2 <- df2[df2$`TM_left (°C)` < left_TM_max, ]
-    # df2 <- df2[df2$`TM_left (°C)` > left_TM_min, ]
-    # df2 <- df2[df2$`TM_right (°C)` < right_TM, ]
-    # df2 <- df2[df2$`TM_Diff (°C)` < diff, ]
-    # df2 <- df2[df2$`Hairpin_left (°C)` < left_hair_TM, ]
-    # df2 <- df2[df2$`Hairpin_right (°C)` < right_hair_TM, ]
-    # df2 <- df2[df2$`Heterodimer (°C)` < Heterodimer_dg, ]
-    # df2 <- df2[df2$`Homodimer_Left (°C)` < Homodimer_left_dg, ]
-    # df2 <- df2[df2$`Homodimer_Right (°C)` < Homodimer_right_dg, ]
-
 
 
     colnames(df2) <- c("Identity",
@@ -182,11 +163,10 @@ server <- function(input, output) {
                        "TM_F Hairpin (°C)",
                        "TM_R Hairpin (°C)",
                        "Homodimer_F (°C)",
-                       "Homodimer_R (°C)",
-                       "Heterodimer (°C)")
+                       "Homodimer_R (°C)")
 
     
-    #df2 <- df2[ c(1,2,3,4,) ]
+
     df2 <- df2 %>% 
       mutate_if(is.numeric, round, digits = 2) %>% 
       arrange('TM diff (°C)', 'TM_L Hairpin (°C)')
@@ -195,13 +175,12 @@ server <- function(input, output) {
     
     # write.csv(df2, "metadata.csv")
     
-    
     return(df2)
   }
   
 
   # These are the paramters used for trouble shotting
-
+  
   # primer <- "rs1121980, rs9939609, rs7903146, rs4402960"
   # primer_away <- 450
   # primer_min <- 18
@@ -218,7 +197,7 @@ server <- function(input, output) {
   # Heterodimer_dg <- 10
   # shift <- 150
   # left_TM_max = 68
-  # left_TM_min = 60
+  # left_TM_min = 55
 
   
   ## The main function
@@ -284,9 +263,11 @@ server <- function(input, output) {
     
     print("Start big loop")
     
+    clock = 1
     for (primer_away in primer_away:(primer_away + shift)){
-      print("Amplicant distance")
-      print(primer_away)
+      print("Iteration")
+      clock = (clock +1)
+      print(paste(round((clock +1)/2,2), "%", sep = ""))
     
     # add columns for the substrings leading up to and including the variant site
     # produce right flanking left primer
@@ -455,9 +436,106 @@ server <- function(input, output) {
   
   get_multiplex <- function(df2,
                             threshold){
-      
-      
-    return(df2)
+    
+    top <- 10
+    threshold =  30
+    level = 2
+    final = list()
+    
+    df2$direction <- sapply(strsplit(as.character(df2$Identity), " "), function(x) x[[2]])
+    df2$Identity <- sapply(strsplit(as.character(df2$Identity), " "), function(x) x[[1]])
+    
+    df <- df2 %>% 
+      group_by(Identity) %>%
+      slice(1:top)%>%
+      ungroup()
+    
+    nested_tables <- split(df, df$Identity)
+    levels <- length(nested_tables) * 2
+    
+    list_3 <- c()
+    
+    for (i in 1:length(nested_tables)){
+      list_3 <- c(list_3, 
+                  list(unique(get_list(i,2)[[1]])),
+                  list(unique(get_list(i,3)[[1]])))
+    }
+    
+    # list_3 = c(list(unique(get_list(1,2)[[1]])), 
+    #            list(unique(get_list(1,3)[[1]])),
+    #            list(unique(get_list(2,2)[[1]])),
+    #            list(unique(get_list(2,3)[[1]])),
+    #            list(unique(get_list(3,2)[[1]])), 
+    #            list(unique(get_list(3,3)[[1]])),
+    #            list(unique(get_list(4,2)[[1]])),
+    #            list(unique(get_list(4,3)[[1]])))
+    
+    
+    arranged_list <- list_3[order(sapply(list_3, length), 
+                                  decreasing = FALSE)]
+    
+    
+    list_1 <- list(arranged_list[[1]])
+    list_2 <- list(arranged_list[[2]])
+    
+    len_1 <- length(list_1[[1]])
+    len_2 <- length(list_2[[1]])
+    
+    
+    for (level in 3:levels+1){
+      if (length(list_1) != 0 && length(list_2) != 0){
+        len_1 <- length(list_1)
+        #print(paste("length 1:", len_1))
+        len_2 <- length(list_2[[1]])
+        #print(paste("length 2:", len_2))
+        combination <- expand.grid(append(list_1, list_2))
+        print(paste("Total rows", level, "-------", nrow(combination)))
+        indices <- evaluation_new(combination, len_1, len_2)
+        #print(indices)
+        if (level == 3){
+          output1 <- append(list(unlist(list_1)[unlist(indices[1])]),
+                            list(unlist(list_2)[unlist(indices[2])]))
+        }
+        else
+        {
+          output1 <- append(list_1,
+                            list(unlist(list_2)[unlist(indices[2])]))
+        }
+        
+        
+        if (level == levels+1){
+          
+          final <- output1
+        }
+        else{
+          # print("output1")
+          # print(output1)
+          output2 <- list(arranged_list[[level]])
+          # print("output2")
+          # print(output2)
+          
+          list_1 <- output1
+          list_2 <- output2  
+          
+          
+          final <- output1
+        }
+      }
+    }
+    
+    
+    max_length <- max(lengths(final))
+    
+    # Pad the inner lists with NA to make them equal in length
+    padded_lists <- lapply(final, function(x) {
+      length(x) <- max_length
+      x
+    })
+    
+    # Convert padded lists to data frame
+    final2 <- data.frame(do.call(cbind, padded_lists))
+    
+    return(final2)
   }
   
   
