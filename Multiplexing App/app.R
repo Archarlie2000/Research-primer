@@ -67,7 +67,7 @@ ui <- dashboardPage(
       menuItem("Selection", tabName = "Selection", icon = icon("th")),
       textInput(inputId = "primer_list", label = "Enter SNP", value = "rs1121980, rs9939609, rs7903146, rs4402960"),
       numericInput(inputId = "primer_away", label = "Interval (bp)", value = 450),
-      numericInput(inputId = "shift", label = "Shift (bp)", value = 150),
+      numericInput(inputId = "shift", label = "Shift (bp)", value = 50),
       sliderInput("primer_left_length", label = "Forward (bp)", min = 15,
                   max = 30, value = c(18, 25)),
       sliderInput("primer_right_length", label = "Reverse (bp)", min = 15,
