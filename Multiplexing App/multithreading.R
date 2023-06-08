@@ -81,7 +81,7 @@ evaluation_new <- function(combination, len_1, len_2){
     row <- lapply(row, as.character)
     clock = 0
     
-    #print(paste("i is", i))
+    print(paste("i is", i))
     for (j in 1:(num_cols-1)) {
       
       if (max(result_matrix[i, ]) <= threshold){

@@ -54,6 +54,8 @@ library(shiny)
 
 
 source("functions.R")
+
+
 options(repos = BiocManager::repositories())
 
 ui <- dashboardPage(
@@ -64,7 +66,7 @@ ui <- dashboardPage(
       menuItem("Analysis", tabName = "Analysis", icon = icon("th")),
       menuItem("Selection", tabName = "Selection", icon = icon("th")),
       
-      textInput(inputId = "primer_list", label = "Enter SNP", value = "rs1121980, rs9939609, rs7903146, rs7903146"),
+      textInput(inputId = "primer_list", label = "Enter SNP", value = "rs1121980, rs9939609, rs7903146, rs4402960"),
       numericInput(inputId = "primer_away", label = "Interval (bp)", value = 350),
       numericInput(inputId = "shift", label = "Shift (bp)", value = 0),
       sliderInput("primer_left_length", label = "Forward (bp)", min = 15,
@@ -101,6 +103,7 @@ ui <- dashboardPage(
                 )
           )
 )
+
 
 # Define server logic required to draw a histogram
 server <- function(input, output) {
@@ -199,7 +202,7 @@ server <- function(input, output) {
 
   # These are the paramters used for trouble shotting
 
-  # primer <- "rs1121980, rs9939609, rs7903146, rs7903146, rs4402960"
+  # primer <- "rs1121980, rs9939609, rs7903146, rs4402960"
   # primer_away <- 450
   # primer_min <- 18
   # primer_max <- 25
@@ -248,7 +251,6 @@ server <- function(input, output) {
 
     
     ### Wrangling dataframe
-    
     print("Data gathered")
     #Create a new data frame
     snp_wrangled <- data.frame(matrix(ncol = 2, nrow = 0))
@@ -451,43 +453,11 @@ server <- function(input, output) {
     return(mismatch_list_collected)
   }
   
-  get_multiplex <- function(df,
-                            left_TM,
-                            diff,
-                            hetero){
-    
-    
-    
-    s = input$primer_table_rows_selected
-    
-    df = df[s,]
-    
-    print("multiplex activated")
-    outputframe <- data.frame(matrix(ncol = 3, nrow = nrow(df)*nrow(df)))
-    colnames(outputframe) <- c("name", "forward", "reverse")
-
-
-    # Match every forward with every reverse primer for cross checking
-    k <- 0
-    
-    
-    print("total number = ")
-    print(nrow(df)*nrow(df))
-    for (i in 1:nrow(df)){
-      for (j in 1:nrow(df)){
-        k <- j+(i-1)*nrow(df)
-        outputframe[k,1] <- paste(df[i,1], df[j,1])
-        outputframe[k,2] <- df[i,2]
-        outputframe[k,3] <- df[j,3]
-      }
-    }
-
-    df2 <- outputframe
-
-
+  get_multiplex <- function(df2,
+                            threshold){
       
       
-    return(df)
+    return(df2)
   }
   
   
@@ -519,8 +489,6 @@ server <- function(input, output) {
   
   
   output$multiplex_table <- renderDataTable(get_multiplex(masterTable(),
-                                                          input$left_TM[1],
-                                                          input$diff,
                                                           input$Heterodimer_dg)
   )
 

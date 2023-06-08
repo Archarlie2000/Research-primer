@@ -21,7 +21,7 @@ df <- df2 %>%
   ungroup()
 
 nested_tables <- split(df, df$Identity)
-levels <- length(nested_tables) *2
+levels <- length(nested_tables) * 2
 
 
 get_list <- function(i, j){
@@ -29,7 +29,6 @@ get_list <- function(i, j){
   k <- as.list(strsplit(k, " "))
   return(k)
 }
-
 
 
 
@@ -123,13 +122,13 @@ level <- 3
 for (level in 3:levels+1){
   if (length(list_1) != 0 && length(list_2) != 0){
     len_1 <- length(list_1)
-    print(paste("length 1:", len_1))
+    #print(paste("length 1:", len_1))
     len_2 <- length(list_2[[1]])
-    print(paste("length 2:", len_2))
+    #print(paste("length 2:", len_2))
     combination <- expand.grid(append(list_1, list_2))
     print(paste("Total rows", level, "-------", nrow(combination)))
     indices <- evaluation_new(combination, len_1, len_2)
-    # print(indices)
+    #print(indices)
     if (level == 3){
       output1 <- append(list(unlist(list_1)[unlist(indices[1])]),
                         list(unlist(list_2)[unlist(indices[2])]))

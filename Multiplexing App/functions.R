@@ -139,3 +139,42 @@ list_seq <- function(snp) {
   k = k[!grepl("W", k)]
   return(k)
 }
+
+evaluation_new <- function(combination, len_1, len_2){
+  num_rows <- nrow(combination)
+  num_cols <- ncol(combination)
+  result_matrix <- matrix(0, nrow = num_rows, ncol = num_cols-1)
+  
+  
+  # Iterate over each row of the matrix
+  for (i in 1:num_rows) {
+    row <- combination[i, ]
+    row <- lapply(row, as.character)
+    clock = 0
+    
+    print(paste("i is", i))
+    for (j in 1:(num_cols-1)) {
+      
+      if (max(result_matrix[i, ]) <= threshold){
+        clock = clock + 1
+        result_matrix[i, clock] <- calculate_dimer(row[[j]], row[[num_cols]])$temp
+      }
+    }
+  }
+  
+  result_matrix <- as.data.frame(result_matrix)
+  row_indices <- which(apply(result_matrix, 1, function(row) all(row < threshold)))
+  #print(row_indices)
+  indices_1 <- unique(ceiling(row_indices/len_1))
+  if (len_1 == 1){
+    indices_1 <- 1
+  }
+  indices_2 <- unique(sapply(row_indices,
+                             function(x) if(x%%len_2 == 0){return(len_2)}
+                             else
+                             {return(x%%len_2)} ))
+  #print(indices_1)
+  #print(indices_2)
+  good_slection = c(list(indices_1), list(indices_2))
+  return(good_slection)
+}
