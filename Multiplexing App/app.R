@@ -182,7 +182,7 @@ server <- function(input, output) {
   # These are the paramters used for trouble shotting
   
   # primer <- "rs1121980, rs9939609, rs7903146, rs4402960"
-  # primer_away <- 450
+  # primer_away <- 500
   # primer_min <- 18
   # primer_max <- 25
   # primer_left_min <- 18
@@ -195,9 +195,9 @@ server <- function(input, output) {
   # Homodimer_left_dg <- 30
   # Homodimer_right_dg <- 30
   # Heterodimer_dg <- 10
-  # shift <- 50
-  # left_TM_max = 68
-  # left_TM_min = 55
+  # shift <- 400
+  # left_TM_max = 66
+  # left_TM_min = 60
 
   
   ## The main function
@@ -217,8 +217,8 @@ server <- function(input, output) {
     # Accessing database
     print("Execute MART API")
     snp_list <- strsplit(primer, " ")[[1]]
-    upStream <- c("500")
-    downStream <- c("500")
+    upStream <- c("700")
+    downStream <- c("700")
     snpmart <- useMart("ENSEMBL_MART_SNP", dataset = "hsapiens_snp")
     snp_sequence <- getBM(attributes = c('refsnp_id', 'snp'),
                           filters = c('snp_filter', 'upstream_flank', 'downstream_flank'),
@@ -266,7 +266,7 @@ server <- function(input, output) {
     clock = 0
     for (primer_away in primer_away:(primer_away + shift)){
       
-      print(paste("Iteration ----- ", clock/shift *100, "%", sep = ""))
+      print(paste("Iteration ----- ", round(clock/shift *100,2), "%", sep = ""))
       clock = (clock +1)
       
     # add columns for the substrings leading up to and including the variant site
@@ -414,7 +414,8 @@ server <- function(input, output) {
       mutate(identity = paste(snp, flanking_direction)) %>%
       as.data.frame() %>%
       dplyr::select(c(9, 8, 5))
-     
+    
+    
     colnames(mismatch_list) = c("identity", "Forward", "Reversed")
 
     
@@ -437,7 +438,7 @@ server <- function(input, output) {
   get_multiplex <- function(df2,
                             threshold){
     
-    top <- 10
+    top <- 50
     level = 2
     final = list()
     
@@ -481,7 +482,7 @@ server <- function(input, output) {
         row <- lapply(row, as.character)
         clock = 0
         
-        print(paste("i is", i))
+        #print(paste("i is", i))
         for (j in 1:(num_cols-1)) {
           
           if (max(result_matrix[i, ]) <= threshold){
@@ -502,6 +503,7 @@ server <- function(input, output) {
                                  function(x) if(x%%len_2 == 0){return(len_2)}
                                  else
                                  {return(x%%len_2)} ))
+      
       #print(indices_1)
       #print(indices_2)
       good_slection = c(list(indices_1), list(indices_2))
