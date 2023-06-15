@@ -178,11 +178,11 @@ server <- function(input, output) {
     return(df2)
   }
   
-
+  # primer <- "rs1121980, rs9939609, rs7903146, rs4402960"
   # These are the paramters used for trouble shotting
   
-  # primer <- "rs1121980, rs9939609, rs7903146, rs4402960"
-  # primer_away <- 500
+  # primer <- "rs4402960"
+  # primer_away <- 250
   # primer_min <- 18
   # primer_max <- 25
   # primer_left_min <- 18
@@ -217,8 +217,9 @@ server <- function(input, output) {
     # Accessing database
     print("Execute MART API")
     snp_list <- strsplit(primer, " ")[[1]]
-    upStream <- c("700")
-    downStream <- c("700")
+    center = 500
+    upStream <- center
+    downStream <- center
     snpmart <- useMart("ENSEMBL_MART_SNP", dataset = "hsapiens_snp")
     snp_sequence <- getBM(attributes = c('refsnp_id', 'snp'),
                           filters = c('snp_filter', 'upstream_flank', 'downstream_flank'),
@@ -266,7 +267,7 @@ server <- function(input, output) {
     clock = 0
     for (primer_away in primer_away:(primer_away + shift)){
       
-      print(paste("Iteration ----- ", round(clock/shift *100,2), "%", sep = ""))
+      print(paste("Iteration ----- ", round(clock/shift * 100,2), "%", sep = ""))
       clock = (clock +1)
       
     # add columns for the substrings leading up to and including the variant site
@@ -274,45 +275,45 @@ server <- function(input, output) {
     for (i in primer_left_min:primer_left_max) {
       colname <- paste0("left", i)
       variantsTrimmed <- variantsTrimmed %>%
-        mutate(!!colname := str_sub(sequence, 501 - i, 501))
+        mutate(!!colname := str_sub(sequence, center+1 - i, center +1))
     }
     
     
     # produce right flanking right primer
     for (i in primer_min:primer_max) {
-      colname <- paste0("right", 500 - primer_away - i)
+      colname <- paste0("right", center - primer_away - i)
       variantsTrimmed <- variantsTrimmed %>% mutate(!!colname := str_sub(sequence,
-                                                                         500 - primer_away - i,
-                                                                         500 - primer_away))
+                                                                         center - primer_away - i,
+                                                                         center - primer_away))
     }
     
     # produce left flanking left primer
     for (i in primer_left_min:primer_left_max) {
       colname <- paste0("(left_flanking)_left", i)
       variantsTrimmed_ghost <- variantsTrimmed_ghost %>%
-        mutate(!!colname := str_sub(sequence, 501, 500 + i))
+        mutate(!!colname := str_sub(sequence, center+1, center + i))
     }
     
     
     # produce left flanking right primer
     for (i in primer_min:primer_max) {
-      colname <- paste0("(left_flanking)_right", 500 + primer_away + i)
+      colname <- paste0("(left_flanking)_right", center + primer_away + i)
       variantsTrimmed_ghost <- variantsTrimmed_ghost %>% mutate(!!colname := str_sub(sequence,
-                                                                         500 + primer_away - i,
-                                                                         500 + primer_away))
+                                                                                     center + primer_away - i,
+                                                                                     center + primer_away))
     }
     
     ## Define the range of flanking for pivoting (right flanking)
     limit_left_start <- paste("left", primer_left_max, sep = "")
     limit_left_stop <- paste("left", primer_left_min, sep = "")
-    limit_right_start <- paste("right", 500 - primer_away - primer_max, sep = "")
-    limit_right_stop <- paste("right", 500 - primer_away - primer_min, sep = "")
+    limit_right_start <- paste("right", center - primer_away - primer_max, sep = "")
+    limit_right_stop <- paste("right", center - primer_away - primer_min, sep = "")
 
     ## Define the range of flanking for pivoting (left flanking)
     left_flanking_limit_left_start <- paste("(left_flanking)_left", primer_left_max, sep = "")
     left_flanking_limit_left_stop <- paste("(left_flanking)_left", primer_left_min, sep = "")
-    left_flanking_limit_right_start <- paste("(left_flanking)_right", 500 + primer_away + primer_max, sep = "")
-    left_flanking_limit_right_stop <- paste("(left_flanking)_right", 500 + primer_away + primer_min, sep = "")
+    left_flanking_limit_right_start <- paste("(left_flanking)_right", center + primer_away + primer_max, sep = "")
+    left_flanking_limit_right_stop <- paste("(left_flanking)_right", center + primer_away + primer_min, sep = "")
     
     
     
