@@ -11,7 +11,7 @@ for (item in get_list(1,2)[[1]]) {
   newList[item] <- sublist
 }
 
-newList
+# newList
 
 level2 <- list()
 
@@ -22,7 +22,7 @@ for (item in get_list(1,3)[[1]]) {
   level2[item] <- sublist
 
 }
-level2
+# level2
 
 level3 <- list()
 
@@ -46,7 +46,7 @@ for (item in get_list(2,2)[[1]]) {
   }
 
 level4
-# level3
+level3
 # names(level3)
 # names(level3[[1]])
 
@@ -64,38 +64,29 @@ for (j in names(level3)){
 level3
 str(level3)
 
-# for (k in names(level3)){
-#   for (i in names(level3[[k]])){
-#     level5[k][i] <- list(level4)
-#   }
-# }
-
-level5
-
-
 
 
 # compare the name of the current list at the end point 
 # to the parent node
-
-names(level3[[1]])[[1]]
-
-str(names(level3[[1]])[[1]])
-
-class(names(level3[[1]])[[1]])
-
-calculate_homodimer(names(level3[[1]])[[1]])$temp
-
-names(level3)[[1]]
+# 
+# names(level3[[1]])[[1]]
+# 
+# str(names(level3[[1]])[[1]])
+# 
+# class(names(level3[[1]])[[1]])
+# 
+# calculate_homodimer(names(level3[[1]])[[1]])$temp
+# 
+# names(level3)[[1]]
 
 # Remove end point
-level3[[1]][[2]][3] <- NULL
+# level3[[1]][[2]][3] <- NULL
 
-
-calculate_dimer(
-  names(level3)[[1]],
-  names(level3[[1]])[[1]]
-  )$temp
+# 
+# calculate_dimer(
+#   names(level3)[[1]],
+#   names(level3[[1]])[[1]]
+#   )$temp
 
 
 
@@ -107,12 +98,16 @@ compare <- function(s1,s2,s3){
   ))
   print(paste("Comparision 1: ", calculate_dimer(s2, s3)$temp
   ))
-  result = ( calculate_dimer(s1, s3)$temp < threshold) +
-           ( calculate_dimer(s2, s3)$temp < threshold)
   
-  return( (result == 0) )
+  result = ( calculate_dimer(s1, s3)$temp > threshold) +
+           ( calculate_dimer(s2, s3)$temp > threshold)
+  
+  print(paste("Result: ", result))
+  return( result )
 }
 
+threshold = 1
+blacklist <- list()
 
 
 # Evaluate parents
@@ -134,6 +129,8 @@ for (j in 1:length(names(level3))){
       
       if (compare(s1,s2,s3)){
         print("not valid")
+        # Remove end point
+        blacklist <- c(blacklist, list(c(j, k, m)))
       }
       else{
         print("valid")
@@ -143,8 +140,32 @@ for (j in 1:length(names(level3))){
   }
 }
 
+# a list that had bad nodes
+blacklist
+length(blacklist)
+str(blacklist)
 
 
+# Remove children
+for (bad in rev(blacklist)){
+  j = bad[[1]]
+  k = bad[[2]]
+  m = bad[[3]]
+  
+  print(paste("level 1: ", bad[[1]]
+  ))
+  print(paste("level 2: ", bad[[2]]
+  ))
+  print(paste("level 3: ", bad[[3]]
+  ))
+  print("------------")
+  
+  
+  level3[[j]][[k]][m] <- NULL
+  
+}
+
+str(level3)
 
 
 
