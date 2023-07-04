@@ -56,6 +56,7 @@ library(shiny)
 source("functions.R")
 
 
+
 options(repos = BiocManager::repositories())
 
 ui <- dashboardPage(
@@ -67,7 +68,7 @@ ui <- dashboardPage(
       menuItem("Selection", tabName = "Selection", icon = icon("th")),
       textInput(inputId = "primer_list", label = "Enter SNP", value = "rs1121980, rs9939609, rs7903146, rs4402960"),
       numericInput(inputId = "primer_away", label = "Interval (bp)", value = 450),
-      numericInput(inputId = "shift", label = "Shift (bp)", value = 50),
+      numericInput(inputId = "shift", label = "Shift (bp)", value = 10),
       sliderInput("primer_left_length", label = "Forward (bp)", min = 15,
                   max = 30, value = c(18, 25)),
       sliderInput("primer_right_length", label = "Reverse (bp)", min = 15,
@@ -98,7 +99,7 @@ ui <- dashboardPage(
       tabItem(tabName = "Selection",
           
           #column(3, verbatimTextOutput('x4')),
-          DT::dataTableOutput(outputId = "multiplex_table"),
+          #DT::dataTableOutput(outputId = "multiplex_table"),
                 )
           )
 )
@@ -177,11 +178,11 @@ server <- function(input, output) {
     
     return(df2)
   }
-  
-  # primer <- "rs1121980, rs9939609, rs7903146, rs4402960"
+
+ 
   # These are the paramters used for trouble shotting
-  
-  # primer <- "rs4402960"
+
+  # primer <- "rs1121980, rs9939609, rs7903146, rs4402960"
   # primer_away <- 250
   # primer_min <- 18
   # primer_max <- 25
@@ -198,6 +199,8 @@ server <- function(input, output) {
   # shift <- 400
   # left_TM_max = 66
   # left_TM_min = 60
+  # threshold = 5
+  # center = 800
 
   
   ## The main function
@@ -210,6 +213,8 @@ server <- function(input, output) {
                        diff,
                        shift){
     
+    center <- 800
+  
     ## Not sure why, but it works
     primer_away <- -primer_away
     
@@ -217,7 +222,6 @@ server <- function(input, output) {
     # Accessing database
     print("Execute MART API")
     snp_list <- strsplit(primer, " ")[[1]]
-    center = 500
     upStream <- center
     downStream <- center
     snpmart <- useMart("ENSEMBL_MART_SNP", dataset = "hsapiens_snp")
@@ -431,7 +435,7 @@ server <- function(input, output) {
     print("rows of mismatch collected = ")
     print(nrow(mismatch_list_collected))
     
-    # df <- mismatch_list_collected
+    df <- mismatch_list_collected
     
     return(mismatch_list_collected)
   }
@@ -439,143 +443,45 @@ server <- function(input, output) {
   get_multiplex <- function(df2,
                             threshold){
     
-    top <- 50
+    top <- 25
     level = 2
     final = list()
     
-    df2$direction <- sapply(strsplit(as.character(df2$Identity), " "), function(x) x[[2]])
-    df2$Identity <- sapply(strsplit(as.character(df2$Identity), " "), function(x) x[[1]])
+    df2$direction <- sapply(strsplit(as.character(df2$identity), " "), function(x) x[[2]])
+    df2$identity <- sapply(strsplit(as.character(df2$identity), " "), function(x) x[[1]])
     
     df <- df2 %>% 
-      group_by(Identity) %>%
+      group_by(identity) %>%
       slice(1:top)%>%
       ungroup()
     
-    nested_tables <- split(df, df$Identity)
+    nested_tables <- split(df, df$identity)
     
     levels <- length(nested_tables) * 2
     
     
     list_3 <- c()
     
-    
+    ## Clean out the nested table for the algorithum
     get_list <- function(i, j){
       k <- str_flatten(nested_tables[[i]][[j]], collapse = " ")
       k <- as.list(strsplit(k, " "))
       return(k)
     }
     
+    # Remove duplciated primers under each SNP
     for (i in 1:length(nested_tables)){
       list_3 <- c(list_3, 
                   list(unique(get_list(i,2)[[1]])),
                   list(unique(get_list(i,3)[[1]])))
     }
     
-    evaluation_new <- function(combination, len_1, len_2){
-      num_rows <- nrow(combination)
-      num_cols <- ncol(combination)
-      result_matrix <- matrix(0, nrow = num_rows, ncol = num_cols-1)
-      
-      
-      # Iterate over each row of the matrix
-      for (i in 1:num_rows) {
-        row <- combination[i, ]
-        row <- lapply(row, as.character)
-        clock = 0
-        
-        #print(paste("i is", i))
-        for (j in 1:(num_cols-1)) {
-          
-          if (max(result_matrix[i, ]) <= threshold){
-            clock = clock + 1
-            result_matrix[i, clock] <- calculate_dimer(row[[j]], row[[num_cols]])$temp
-          }
-        }
-      }
-      
-      result_matrix <- as.data.frame(result_matrix)
-      row_indices <- which(apply(result_matrix, 1, function(row) all(row < threshold)))
-      #print(row_indices)
-      indices_1 <- unique(ceiling(row_indices/len_1))
-      if (len_1 == 1){
-        indices_1 <- 1
-      }
-      indices_2 <- unique(sapply(row_indices,
-                                 function(x) if(x%%len_2 == 0){return(len_2)}
-                                 else
-                                 {return(x%%len_2)} ))
-      
-      #print(indices_1)
-      #print(indices_2)
-      good_slection = c(list(indices_1), list(indices_2))
-      return(good_slection)
-    }
-
-    print("Bear")
-    
+    # Arrange the list from small to big
     arranged_list <- list_3[order(sapply(list_3, length), 
                                   decreasing = FALSE)]
     
     
-    list_1 <- list(arranged_list[[1]])
-    list_2 <- list(arranged_list[[2]])
-    
-    len_1 <- length(list_1[[1]])
-    len_2 <- length(list_2[[1]])
-    
-    
-    for (level in 3:levels+1){
-      if (length(list_1) != 0 && length(list_2) != 0){
-        len_1 <- length(list_1)
-        #print(paste("length 1:", len_1))
-        len_2 <- length(list_2[[1]])
-        #print(paste("length 2:", len_2))
-        combination <- expand.grid(append(list_1, list_2))
-        print(paste("Total rows", level, "-------", nrow(combination)))
-        indices <- evaluation_new(combination, len_1, len_2)
-        #print(indices)
-        if (level == 3){
-          output1 <- append(list(unlist(list_1)[unlist(indices[1])]),
-                            list(unlist(list_2)[unlist(indices[2])]))
-        }
-        else
-        {
-          output1 <- append(list_1,
-                            list(unlist(list_2)[unlist(indices[2])]))
-        }
-        
-        
-        if (level == levels+1){
-          
-          final <- output1
-        }
-        else{
-          # print("output1")
-          # print(output1)
-          output2 <- list(arranged_list[[level]])
-          # print("output2")
-          # print(output2)
-          
-          list_1 <- output1
-          list_2 <- output2  
-          
-          
-          final <- output1
-        }
-      }
-    }
-    
-    
-    max_length <- max(lengths(final))
-    
-    # Pad the inner lists with NA to make them equal in length
-    padded_lists <- lapply(final, function(x) {
-      length(x) <- max_length
-      x
-    })
-    
-    # Convert padded lists to data frame
-    final2 <- data.frame(do.call(cbind, padded_lists))
+
     
     return(final2)
   }
