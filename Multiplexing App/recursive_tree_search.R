@@ -165,7 +165,7 @@ str(level3)
 #   return(level4)
 # }
 
-level4 <- incoming_list(level3, arranged_list[[3]])
+level4 <- incoming_list(arranged_list[[3]])
 
 
 # replace_end_nodes <- function(lst, replace_lst) {
@@ -194,6 +194,26 @@ endpoints <- get_endpoints(level3)
 length(endpoints)
 
 
+endpoints <- get_endpoints(level3)
+print(endpoints)
 
+endpoints <- clean_endpoints(endpoints)
+print(endpoints)
+
+bad_nodes <- compute_bad_nodes(endpoints)
+print(bad_nodes)
+
+
+level3 <- Iterate_remove(level3,bad_nodes)
+level3 <- remove_empty_lists(level3)
+
+
+str(level3)
+
+level4 <- incoming_list(arranged_list[[4]])
+str(level4)
+
+level3 <- replace_end_nodes(level3, level4)
+str(level3)
 
 

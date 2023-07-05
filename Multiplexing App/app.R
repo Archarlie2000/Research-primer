@@ -436,17 +436,15 @@ server <- function(input, output) {
     print(nrow(mismatch_list_collected))
     
     df <- mismatch_list_collected
-    
+    df3 <- df
     return(mismatch_list_collected)
   }
   
   get_multiplex <- function(df2,
                             threshold){
     
-    top <- 25
-    level = 2
-    final = list()
-    
+    top <- 15
+
     df2$direction <- sapply(strsplit(as.character(df2$identity), " "), function(x) x[[2]])
     df2$identity <- sapply(strsplit(as.character(df2$identity), " "), function(x) x[[1]])
     
@@ -457,12 +455,9 @@ server <- function(input, output) {
     
     nested_tables <- split(df, df$identity)
     
-    levels <- length(nested_tables) * 2
-    
-    
     list_3 <- c()
     
-    ## Clean out the nested table for the algorithum
+    ## Clean out the nested table for the algorithm
     get_list <- function(i, j){
       k <- str_flatten(nested_tables[[i]][[j]], collapse = " ")
       k <- as.list(strsplit(k, " "))
@@ -481,9 +476,63 @@ server <- function(input, output) {
                                   decreasing = FALSE)]
     
     
-
     
-    return(final2)
+    
+    
+    ###### Prepare level3
+    level2 <- list()
+    level3 <- list()
+    level4 <- list()
+    
+    level2 <- incoming_list(arranged_list[[1]])
+    str(level2)
+    
+    level3 <- replace_end_nodes(incoming_list(arranged_list[[1]]),
+                                incoming_list(arranged_list[[2]])
+                                )
+    str(level3)
+    
+    level3 <- replace_end_nodes(level3,
+                                incoming_list(arranged_list[[3]])
+    )
+    
+    str(level3)
+    
+    
+    
+    
+    # Running
+    
+    for (i in 4:length(arranged_list)){
+      endpoints <- get_endpoints(level3)
+      endpoints <- clean_endpoints(endpoints)
+      print(paste("Start with ", length(endpoints)))
+      
+      
+      bad_nodes <- compute_bad_nodes(endpoints)
+      print(paste("We are removing: ", length(bad_nodes)))
+      
+      if (length(bad_nodes) != 0){
+      level3 <- Iterate_remove(level3,bad_nodes)
+      level3 <- remove_empty_lists(level3)
+      }
+      
+      print(paste("After the removal", length(get_endpoints(level3))))
+      
+      level4 <- incoming_list(arranged_list[[i]])
+      print(paste("New list", length(level4)))
+      
+      level3 <- replace_end_nodes(level3, level4)
+      print(paste("Add new list to level3 ", length(get_endpoints(level3))))
+      
+      print(paste("How far are we ", i))
+      print("--------------------------")
+    }
+    
+    
+    
+    
+    return(level3)
   }
   
   
