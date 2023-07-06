@@ -34,6 +34,7 @@ library(dplyr)
 library(tidyverse)
 library(stringi)
 library(stringr)
+library(mosaic)
 
 
 #graphing
@@ -132,14 +133,19 @@ server <- function(input, output) {
     
     #start_time <- Sys.time()  
     df2$`TM_left (°C)` <- sapply(df2$Forward, calculate_tm)
+    df2 <- df2[df2$`TM_left (°C)` > 55, ]
+    df2$`TM_right (°C)` <- sapply(df2$Reversed, calculate_tm)
     df2 <- df2[df2$`TM_left (°C)` < left_TM_max, ]
     df2 <- df2[df2$`TM_left (°C)` > left_TM_min, ]
-    
-    df2$`TM_right (°C)` <- sapply(df2$Reversed, calculate_tm)
-    df2 <- df2[df2$`TM_right (°C)` < right_TM, ]
-    
     df2$`TM_Diff (°C)` <- abs(df2$`TM_left (°C)` - df2$`TM_right (°C)`)
     df2 <- df2[df2$`TM_Diff (°C)` < diff, ]
+    
+  
+    favstats(`TM_left (°C)` ~ identity, data = df2)
+    
+    
+    df2 <- df2[df2$`TM_right (°C)` < right_TM, ]
+    
     
     df2$`Hairpin_left (°C)` <- sapply(df2$Forward, function(x) calculate_hairpin(x)$temp)
     df2 <- df2[df2$`Hairpin_left (°C)` < left_hair_TM, ]
@@ -199,7 +205,7 @@ server <- function(input, output) {
   # shift <- 400
   # left_TM_max = 66
   # left_TM_min = 60
-  # threshold = 5
+  # threshold = 0
   # center = 800
 
   
@@ -213,7 +219,7 @@ server <- function(input, output) {
                        diff,
                        shift){
     
-    center <- 800
+    # center <- 800
   
     ## Not sure why, but it works
     primer_away <- -primer_away
@@ -222,8 +228,8 @@ server <- function(input, output) {
     # Accessing database
     print("Execute MART API")
     snp_list <- strsplit(primer, " ")[[1]]
-    upStream <- center
-    downStream <- center
+    upStream <- 500
+    downStream <- 500
     snpmart <- useMart("ENSEMBL_MART_SNP", dataset = "hsapiens_snp")
     snp_sequence <- getBM(attributes = c('refsnp_id', 'snp'),
                           filters = c('snp_filter', 'upstream_flank', 'downstream_flank'),
@@ -243,10 +249,8 @@ server <- function(input, output) {
     # Add each variation as a new string into each row
     for (j in snp_sequence$`Variant name`){
       for (i in list_seq(snp_sequence$`Variant sequences`[snp_sequence$`Variant name`==j])){
-        
         snp_wrangled[nrow(snp_wrangled) + 1,] <- c(j, i)
       }
-      
     }
     
     # Rename columns and data frame
@@ -260,10 +264,17 @@ server <- function(input, output) {
                                           Reversed = c()
     ) 
     
+    
+    ### I have a long long string. I want to get the left 18~25 charactors and 
+    # between 300 ~ 800 units away, I want another 18 ~ 25
+    
+    
     ### Insert mega for loop
     ###
     ###
     ###
+    
+    
     
     
     print("Start big loop")
@@ -443,7 +454,7 @@ server <- function(input, output) {
   get_multiplex <- function(df2,
                             threshold){
     
-    top <- 15
+    top <- 25
 
     df2$direction <- sapply(strsplit(as.character(df2$identity), " "), function(x) x[[2]])
     df2$identity <- sapply(strsplit(as.character(df2$identity), " "), function(x) x[[1]])
@@ -568,15 +579,7 @@ server <- function(input, output) {
   )
 
   
-  
-  output$x4 = renderPrint({
-    s = input$primer_table_rows_selected
-    if (length(s)) {
-      cat('These rows were selected:\n\n')
-      cat(s, sep = ', ')
-    }
-  })
-  
+
   output$downloadData <- downloadHandler(
     filename = function() {
       paste("Save a df", ".csv", sep = "")

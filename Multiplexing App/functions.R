@@ -215,7 +215,8 @@ compute_bad_nodes <- function(endpoints){
     result = 0
     for (j in 1:length(endpoints[[i]]$parents)){
       result = result + (calculate_dimer(endpoints[[i]]$endpoint, endpoints[[i]]$parents[j])$temp > threshold)
-    }
+      # print(calculate_dimer(endpoints[[i]]$endpoint, endpoints[[i]]$parents[j])$temp)
+      }
     blacklist <- c(blacklist, result)
   }
   
@@ -260,7 +261,7 @@ Iterate_remove <- function(level3,bad_nodes){
 }
 
 # Gather incoming list
-incoming_list <- function(level3, arranged_list){
+incoming_list <- function(arranged_list){
   level4 <- list()
   for (item in arranged_list) {
     # Create a sublist with the name as the item
