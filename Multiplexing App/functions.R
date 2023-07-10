@@ -10,18 +10,7 @@ get_strong1 <- function(x){
   return(x)
 }
 
-## Get strong mismatch for the first three bp
-left_flanking_get_strong1 <- function(x){
-  temp <- ""
-  target <- str_sub(x , 3, 3)
-  
-  if (target == "A") {temp <- "G"} else
-    if (target == "G") {temp <- "A"} else
-      if (target == "C") {temp <- "T"} else
-        if (target == "T") {temp <- "C"}
-  substring(x, 3, 3) <- temp
-  return(x)
-}
+
 
 ## Get strong mismatch for the last three bp, there are two types
 get_strong2 <- function(x){
@@ -36,17 +25,6 @@ get_strong2 <- function(x){
     return("N")
 }
 
-## Get strong mismatch for the first three bp
-left_flanking_get_strong2 <- function(x){
-  temp <- ""
-  target <- str_sub(x , 3, 3)
-  if (target == "T") {
-    temp <- "T"
-    substring(x, 3, 3) <- temp
-    return(x)}
-  else
-    return("N")
-}
 
 
 ## Get medium mismatch for the last three bp
@@ -63,18 +41,6 @@ get_medium1 <- function(x){
   
 }
 
-## Get weak mismatch for the first three bp
-left_flanking_get_medium1 <- function(x){
-  temp <- ""
-  target <- str_sub(x , - 3, - 3)
-  
-  if (target == "A") {temp <- "A"} else
-    if (target == "G") {temp <- "G"} else
-      if (target == "C") {temp <- "C"} else
-        return("N")
-  substring(x, 3, 3) <- temp
-  return(x)
-}
 
 
 ## Get weak mismatch for the last three bp
@@ -88,34 +54,6 @@ get_weak1 <- function(x){
         if (target == "T") {temp <- "G"}
   substring(x, nchar(x) - 2, nchar(x) - 2) <- temp
   return(x)
-}
-
-
-## Get weak mismatch for the first three bp
-left_flanking_get_weak1 <- function(x){
-  temp <- ""
-  target <- str_sub(x , - 3, - 3)
-  
-  if (target == "C") {temp <- "A"} else
-    if (target == "A") {temp <- "C"} else
-      if (target == "G") {temp <- "T"} else
-        if (target == "T") {temp <- "G"}
-  substring(x, 3, 3) <- temp
-  return(x)
-}
-
-
-## Get reversed sequnce of a string (There is a beter way to do this, but)
-reverse_chars <- function(string)
-{
-  # split string by characters
-  string_split = strsplit(string, split = "")
-  # reverse order
-  rev_order = nchar(string):1
-  # reversed characters
-  reversed_chars = string_split[[1]][rev_order]
-  # collapse reversed characters
-  paste(reversed_chars, collapse = "")
 }
 
 
@@ -146,7 +84,6 @@ get_list <- function(i, j){
   k <- as.list(strsplit(k, " "))
   return(k)
 }
-
 
 
 # Get all endpoints and give parents and children
@@ -208,15 +145,16 @@ clean_endpoints <- function(endpoints){
 
 
 # find the bad nodes
-compute_bad_nodes <- function(endpoints){
+compute_bad_nodes <- function(endpoints, threshold){
   blacklist <- list()
   
   for (i in 1:length(endpoints)){
     result = 0
     for (j in 1:length(endpoints[[i]]$parents)){
-      result = result + (calculate_dimer(endpoints[[i]]$endpoint, endpoints[[i]]$parents[j])$temp > threshold)
-      # print(calculate_dimer(endpoints[[i]]$endpoint, endpoints[[i]]$parents[j])$temp)
-      }
+        result = result + (calculate_dimer(endpoints[[i]]$endpoint, 
+                                           endpoints[[i]]$parents[j])$temp > threshold)
+        # print(calculate_dimer(endpoints[[i]]$endpoint, endpoints[[i]]$parents[j])$temp)
+    }
     blacklist <- c(blacklist, result)
   }
   
@@ -285,6 +223,189 @@ replace_end_nodes <- function(lst, replace_lst) {
   }
 }
 
+
+## get the primers that is around the SNP and apply mismatches rules
+extract_substrings <- function(string, center, start_distance , end_distance) {
+  # Empty lists to store substrings
+  substrings_left <- list()
+  substrings_right <- list()
+  
+  for (item in string) {
+    center = center + 1
+    start_distance = start_distance + 1
+    end_distance = end_distance + 1
+    
+    
+    # right flanking
+    for (distance in start_distance:end_distance) {
+      sub <- substr(item, center, center + distance)
+      substrings_right <- c(substrings_right,
+                            toupper(reverseComplement(get_strong1(sub))),
+                            toupper(reverseComplement(get_strong2(sub))),
+                            toupper(reverseComplement(get_medium1(sub))),
+                            toupper(reverseComplement(get_weak1(sub))))
+    }
+    
+    # Left flanking
+    for (distance in start_distance:end_distance) {
+      # print(substr(string, center -distance, center))
+      sub <- substr(item, center -distance, center)
+      substrings_left <- c(substrings_left, 
+                           get_strong1(sub),
+                           get_strong2(sub),
+                           get_medium1(sub),
+                           get_weak1(sub))
+    }
+    
+  }
+  
+  
+  
+  # Return the extracted substrings
+  return(list(left = substrings_left[!substrings_left %in% "N"], 
+              right = substrings_right[!substrings_right %in% "N"]))
+}
+
+## Get the primers that are far away from the SNP
+extract_substrings_far <- function(string, 
+                                   center, 
+                                   start_distance , 
+                                   end_distance, 
+                                   far, 
+                                   shift) {
+  # Empty lists to store substrings
+  substrings_left <- list()
+  substrings_right <- list()
+  
+  for (i in seq(far, far + shift)){
+    # to Right
+    for (distance in start_distance:end_distance) {
+      # print(substr(string, far + center, far + center + distance))
+      sub = substr(string, i + center, i + center + distance)
+      substrings_right <- c(substrings_right, toupper(reverseComplement(sub)))
+    }
+    
+    # Left flanking
+    for (distance in start_distance:end_distance) {
+      # print(substr(string, center - distance - far, center - far))
+      substrings_left <- c(substrings_left, 
+                           substr(string, 
+                                  center - distance - i, 
+                                  center - i))}
+  }
+  
+  # Return the extracted substrings
+  return(list(left = substrings_left, right = substrings_right))
+}
+
+
+## The one that produce all the primers
+all_text_warngling <- function(snp_wrangled, 
+                               start_distance, 
+                               end_distance, 
+                               center, 
+                               far, 
+                               shift){
+  
+  grouped_sequences <- snp_wrangled %>%
+    group_by(snpID) %>%
+    summarize(sequence_list = list(sequence)) %>% 
+    mutate(substrings = map(sequence_list, ~extract_substrings(.x, 
+                                                               center, 
+                                                               start_distance,
+                                                               end_distance))) %>% 
+    unnest(substrings)
+  
+  
+  grouped_sequences_far <- snp_wrangled %>% 
+    group_by(snpID) %>%
+    slice(1:1)%>%
+    ungroup() %>% 
+    mutate(substrings = map(sequence,
+                            ~extract_substrings_far(.x,
+                                                    center, 
+                                                    start_distance, 
+                                                    end_distance,
+                                                    far, 
+                                                    shift))) %>% unnest(substrings)
+  grouped_sequences$faraway <- grouped_sequences_far$substrings
+  grouped_sequences <-  grouped_sequences[, -2]
+  return(grouped_sequences)
+}
+
+
+# Apply all the filter before multiplexing
+stage1_filter <- function(df, 
+                          desired_tm, 
+                          diff, 
+                          Homodimer){
+  df
+  for (i in 1:length(df[[2]])){
+    df[[2]][[i]] <- df[[2]][[i]][unlist(sapply(df[[2]][[i]], calculate_homodimer)[1,]) == 1]
+    # df[[2]][[i]] <- df[[2]][[i]][unlist(sapply(df[[2]][[i]], calculate_hairpin)[1,]) == 0]
+    df[[2]][[i]] <- df[[2]][[i]][unlist(sapply(df[[2]][[i]], calculate_tm)) < desired_tm + diff]
+    df[[2]][[i]] <- df[[2]][[i]][unlist(sapply(df[[2]][[i]], calculate_tm)) > desired_tm - diff]
+    if (length(df[[2]][[i]]) == 0){
+      length(df[[3]][[i]]) <- 0
+    }
+  }
+  df
+  
+  for (i in 1:length(df[[3]])){
+    if (length(df[[3]][[i]]) != 0){
+      df[[3]][[i]] <- df[[3]][[i]][unlist(sapply(df[[3]][[i]], calculate_tm)) > desired_tm - diff]
+      df[[3]][[i]] <- df[[3]][[i]][unlist(sapply(df[[3]][[i]], calculate_hairpin)[1,]) == 0]}
+  }
+  df
+  
+  for (i in 1:length(df[[3]])){
+    if (length(df[[3]][[i]]) != 0){
+      df[[3]][[i]] <- df[[3]][[i]][unlist(sapply(df[[3]][[i]], calculate_homodimer)[1,]) == 1]
+      df[[3]][[i]] <- df[[3]][[i]][unlist(sapply(df[[3]][[i]], calculate_tm)) < desired_tm + diff]
+    }
+  }
+  df
+  for (i in length(df[[1]]):1){
+    if (length(df[[2]][[i]]) == 0){
+      df <- df[-i, ]
+    }
+  }
+  df
+  
+  return(df)
+}
+
+
+### select the top n primers for multiplexing
+extract_top_n <- function(nested_list, n) {
+  modified_list <- lapply(nested_list, function(inner_list) {
+    if (length(inner_list) >= n) {
+      inner_list[1:n]
+    } else {
+      inner_list
+    }
+  })
+  return(modified_list)
+}
+
+# This handle what part of the tree we want to show
+get_display_tree <- function(level3, keep){
+  endpoints <- get_endpoints(level3)
+  
+  # Endpoints come back a little messy
+  endpoints <- clean_endpoints(endpoints)
+  
+  
+  display_tree <- list()
+  for (i in 1:keep){
+    display_tree <- c(display_tree, list(unlist(endpoints[[i]])))
+  }
+  display_tree <- data.frame(display_tree)
+  colnames(display_tree) <- paste0("Option ", seq(1, keep))
+  
+  
+  return(display_tree)
+}
 
 
 

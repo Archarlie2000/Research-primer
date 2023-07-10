@@ -1,21 +1,3 @@
-snp_wrangled
-
-
-## produce left and right
-
-
-library(dplyr)
-library(purrr)
-
-## produce lfet and right flanking
-
-# Example parameters
-string <- snp_wrangled[[2]][[1]]
-center <- 500
-start_distance <- 18
-end_distance <- 25
-far = 300
-
 extract_substrings <- function(string, center, start_distance , end_distance) {
   # Empty lists to store substrings
   substrings_left <- list()
@@ -64,7 +46,12 @@ extract_substrings <- function(string, center, start_distance , end_distance) {
 
 
 
-extract_substrings_far <- function(string, center, start_distance , end_distance, far, shift) {
+extract_substrings_far <- function(string, 
+                                   center, 
+                                   start_distance , 
+                                   end_distance, 
+                                   far, 
+                                   shift) {
   # Empty lists to store substrings
   substrings_left <- list()
   substrings_right <- list()
@@ -86,40 +73,43 @@ extract_substrings_far <- function(string, center, start_distance , end_distance
                                     center - i))}
     }
   
-  
-  
   # Return the extracted substrings
   return(list(left = substrings_left, right = substrings_right))
 }
 
 
 
-all_text_warngling(snp_wrangled, center, far, shift){
+all_text_warngling <- function(snp_wrangled, 
+                   start_distance, 
+                   end_distance, 
+                   center, 
+                   far, 
+                   shift){
+  
   center = 500
   grouped_sequences <- snp_wrangled %>%
     group_by(snpID) %>%
     summarize(sequence_list = list(sequence)) %>% 
     mutate(substrings = map(sequence_list, ~extract_substrings(.x, 
                                                                center, 
-                                                               start_distance, 
+                                                               start_distance,
                                                                end_distance))) %>% 
     unnest(substrings)
 
-  
+
   grouped_sequences_far <- snp_wrangled %>% 
     group_by(snpID) %>%
     slice(1:1)%>%
     ungroup() %>% 
-    mutate(substrings = map(sequence, ~extract_substrings_far(.x, 
-                                                              center, 
-                                                              start_distance, 
-                                                              end_distance,
-                                                              far, shift))) %>% 
-    unnest(substrings)
-  
-  
+    mutate(substrings = map(sequence,
+                            ~extract_substrings_far(.x,
+                                                    center, 
+                                                    start_distance, 
+                                                    end_distance,
+                                                    far, 
+                                                    shift))) %>% unnest(substrings)
   grouped_sequences$faraway <- grouped_sequences_far$substrings
-  
+  grouped_sequences <-  grouped_sequences[, -2]
   return(grouped_sequences)
 }
 
