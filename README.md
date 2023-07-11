@@ -15,56 +15,18 @@ https://primer3.org/manual.html#PRIMER_MAX_HAIRPIN_TH
 
 Primer 3 in python module  https://github.com/jensenlab/primer3
 
-## User Manual
+## Attention
 
-Section: DashBoard
+Welcome to the documentation for the multiplexing algorithm used in my project. As you delve into this codebase, I want to highlight some important issues that you should be aware of and consider addressing:
 
-1. Enter SNP - It takes it multple SNP ID. Which can be found in https://www.ncbi.nlm.nih.gov/snp/docs/RefSNP_about/
-2. Amplicant Length (°C) - the distance of the reversed primer will be based on
-3. Shift (bp) - For each shift, the amplicant length will be shorten by 1, and a new batch of new primers will be produced
-4. Forward (bp) - Number of base pair in forward primer
-5. Reversed (bp) - Number of base pair in reverd primer
-6. Left TM max (°C) - This TM result should be identical to primer3 (but it is not). We assume primer concentration = 50nM, Na+ = 50nM
-7. Right TM max (°C) - Tm of reverse primer
-8. Left hairpin max (°C) - This TM result should be identical to primer3
-9. Right hairpin max (°C) - This TM result should be identical to primer3
-10. Max difference in Tm (°C) - abs( Tm forward - Tm reversed )
-11. Homodimer left (°C) - The melting temperature of forward primer to forward primer
-12. Homodimer right (°C) - The melting temperature of reversed primer to reversed primer
-13. Heterodimer (°C) - The melting temperature of forward primer to reversed primer
+Validation and Parameter Adjustment:
+It's important to note that this program has not been validated extensively. The accuracy and reliability of the SNP location are still uncertain. However, I have set up various parameters that allow for systematic adjustment by modifying a single variable. Make sure to thoroughly validate and verify the SNP positions. Additionally, pay attention to the functions responsible for string wrangling and ensure that they are in the correct position. Due to time constraints, I couldn't thoroughly test their placement, so it's crucial to confirm their accuracy.
 
-Section Analysis:
+Tree Search Implementation:
+Currently, the algorithm only utilizes the primers from the left flanking when implementing the tree search. This decision was made to avoid the complexity of growing multiple trees when incorporating both left and right flanking regions. However, it would be beneficial to explore efficient methods for streamlining this process and incorporating primers from both flanking regions. Consider the implications and potential improvements to enhance the overall efficiency and accuracy of the algorithm.
 
-Press download to , well, dowload
-
-## Installation
-
-System Requirement:
-1. R 4.2.3 or above
-
-Step 1 - Install the following R packages. uncomment (crl + shift + c) to run it in the document. Remeber to comment it back after you are done.
-
-```bash
-install.packages("DT")
-install.packages("dplyr")
-install.packages("tidyverse")
-install.packages("stringi")
-install.packages("ggplot2")
-install.packages("hexbin")
-install.packages("patchwork")
-install.packages("plotly")
-install.packages("devtools")
-devtools::install_github("jensenlab/primer3")
-install.packages("TmCalculator")
-install.packages("BiocManager")
-BiocManager::install("biomaRt")
-install.packages("spgs")
-install.packages("shiny")
-install.packages("rsconnect")
-install.packages("shinydashboard")
-```
-
-
+Incomplete Filter Application:
+The filtering process in the current implementation is not fully comprehensive. When filtering out invalid hairpin structures and Tms, you may end up with only one remaining SNP. However, multiplexing requires multiple SNPs to be present. In the code, I have temporarily commented out some of the filtering steps to gather more data. It's essential to revisit this issue and develop a robust filtering mechanism that ensures valid SNPs are retained while maintaining an adequate number for multiplexing.
 
 
 
