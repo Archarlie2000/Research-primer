@@ -1,58 +1,78 @@
-get_strong1 <- function(x){
+get_strong1 <- function(x, type){
   temp <- ""
-  target <- str_sub(x , - 3, - 3)
+  if (type){
+    target <- str_sub(x , 3, 3)
+  } else
+    target <- str_sub(x , -3, -3)
   
   if (target == "A") {temp <- "G"} else
     if (target == "G") {temp <- "A"} else
       if (target == "C") {temp <- "T"} else
         if (target == "T") {temp <- "C"}
-  substring(x, nchar(x) - 2, nchar(x) - 2) <- temp
+  
+  if(type){
+    substring(x, 3, 3) <- temp
+  }else
+    substring(x, nchar(x) - 2, nchar(x) - 2) <- temp
+  
   return(x)
 }
 
-
-
-## Get strong mismatch for the last three bp, there are two types
-get_strong2 <- function(x){
+get_strong2 <- function(x, type){
   temp <- ""
-  target <- str_sub(x , - 3, - 3)
+  
+  if (type){
+    target <- str_sub(x , 3, 3)
+  } else
+    target <- str_sub(x , -3, -3)
   
   if (target == "T") {
     temp <- "T"
-    substring(x, nchar(x) - 2, nchar(x) - 2) <- temp
+    if(type){
+      substring(x, 3, 3) <- temp
+    }else
+      substring(x, nchar(x) - 2, nchar(x) - 2) <- temp
     return(x)}
   else
     return("N")
 }
 
-
-
-## Get medium mismatch for the last three bp
-get_medium1 <- function(x){
+get_medium1 <- function(x, type){
   temp <- ""
-  target <- str_sub(x , - 3, - 3)
+  if (type){
+    target <- str_sub(x , 3, 3)
+  } else
+    target <- str_sub(x , -3, -3)
   
   if (target == "A") {temp <- "A"} else
     if (target == "G") {temp <- "G"} else
       if (target == "C") {temp <- "C"} else
         return("N")
-  substring(x, nchar(x) - 2, nchar(x) - 2) <- temp
-  return(x)
   
+  if(type){
+    substring(x, 3, 3) <- temp
+  }else
+    substring(x, nchar(x) - 2, nchar(x) - 2) <- temp
+  
+  return(x)
 }
 
 
-
-## Get weak mismatch for the last three bp
-get_weak1 <- function(x){
+get_weak1 <- function(x, type){
   temp <- ""
-  target <- str_sub(x , - 3, - 3)
+  if (type){
+    target <- str_sub(x , 3, 3)
+  } else
+    target <- str_sub(x , -3, -3)
   
   if (target == "C") {temp <- "A"} else
     if (target == "A") {temp <- "C"} else
       if (target == "G") {temp <- "T"} else
         if (target == "T") {temp <- "G"}
-  substring(x, nchar(x) - 2, nchar(x) - 2) <- temp
+  if(type){
+    substring(x, 3, 3) <- temp
+  }else
+    substring(x, nchar(x) - 2, nchar(x) - 2) <- temp
   return(x)
 }
 
@@ -231,35 +251,32 @@ extract_substrings <- function(string, center, start_distance , end_distance) {
   substrings_right <- list()
   
   for (item in string) {
-    center = center + 1
-    start_distance = start_distance + 1
-    end_distance = end_distance + 1
-    
     
     # right flanking
     for (distance in start_distance:end_distance) {
-      sub <- substr(item, center, center + distance)
+      sub <- substr(item, center+1, center+1 + distance)
       substrings_right <- c(substrings_right,
-                            toupper(reverseComplement(get_strong1(sub))),
-                            toupper(reverseComplement(get_strong2(sub))),
-                            toupper(reverseComplement(get_medium1(sub))),
-                            toupper(reverseComplement(get_weak1(sub))))
+                            toupper(reverseComplement(get_strong1(sub,1))),
+                            toupper(reverseComplement(get_strong2(sub,1))),
+                            toupper(reverseComplement(get_medium1(sub,1))),
+                            toupper(reverseComplement(get_weak1(sub,1))))
     }
     
     # Left flanking
     for (distance in start_distance:end_distance) {
       # print(substr(string, center -distance, center))
-      sub <- substr(item, center -distance, center)
+      sub <- substr(item, center - distance, center +1)
       substrings_left <- c(substrings_left, 
-                           get_strong1(sub),
-                           get_strong2(sub),
-                           get_medium1(sub),
-                           get_weak1(sub))
+                           get_strong1(sub,0),
+                           get_strong2(sub,0),
+                           get_medium1(sub,0),
+                           get_weak1(sub,0))
     }
     
+    start_distance = start_distance + 1
+    end_distance = end_distance + 1
+    
   }
-  
-  
   
   # Return the extracted substrings
   return(list(left = substrings_left[!substrings_left %in% "N"], 

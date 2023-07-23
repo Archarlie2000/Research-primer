@@ -106,6 +106,7 @@ server <- function(input, output) {
   # These are the paramters used for trouble shooting
   
   # primer = "rs17025867, rs9939609, rs7903146, rs1121980, rs76141775"
+  # primer = "rs17025867"
   # shift = 600
   # desired_tm = 60
   # diff = 2
@@ -149,9 +150,7 @@ server <- function(input, output) {
     
     # Rename columns and data frame
     colnames(snp_wrangled) = c("snpID", "sequence")
-    variantsTrimmed <- snp_wrangled
-    variantsTrimmed_ghost <- snp_wrangled
-    
+
     
     ### I have a long long string. I want to get the left 18~25 charactors and 
     # between 300 ~ 800 units away, I want another 18 ~ 25
