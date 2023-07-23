@@ -174,6 +174,7 @@ server <- function(input, output) {
     print("R get filter activated")
     df <- stage1_filter(df, desired_tm, diff, Homodimer)
     df
+    
     print("Filtered")
     
     

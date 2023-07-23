@@ -312,7 +312,7 @@ extract_substrings_far <- function(string,
   }
   
   # Return the extracted substrings
-  return(list(left = substrings_left, right = substrings_right))
+  return(list(right = substrings_right, left = substrings_left))
 }
 
 
@@ -345,6 +345,7 @@ all_text_warngling <- function(snp_wrangled,
                                                     end_distance,
                                                     far, 
                                                     shift))) %>% unnest(substrings)
+  
   grouped_sequences$faraway <- grouped_sequences_far$substrings
   grouped_sequences <-  grouped_sequences[, -2]
   return(grouped_sequences)
