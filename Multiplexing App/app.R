@@ -106,12 +106,12 @@ server <- function(input, output) {
   # These are the paramters used for trouble shooting
   
   # primer = "rs17025867, rs9939609, rs7903146, rs1121980, rs76141775"
-  # primer = "rs17025867"
-  # shift = 600
+  # shift = 100
   # desired_tm = 60
   # diff = 2
-  # Homodimer_tm = 0
   # Heterodimer_tm = -5
+  # Homodimer <- 45
+  # hairpin <- 45
 
   ## The main function
   mart_api <- function(primer,
@@ -172,7 +172,7 @@ server <- function(input, output) {
                          Homodimer_tm) {
     
     print("R get filter activated")
-    df <- stage1_filter(df, desired_tm, diff, Homodimer)
+    df <- stage1_filter(df, desired_tm, diff, Homodimer, hairpin)
     df
     
     print("Filtered")

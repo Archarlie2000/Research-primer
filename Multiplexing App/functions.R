@@ -356,11 +356,12 @@ all_text_warngling <- function(snp_wrangled,
 stage1_filter <- function(df, 
                           desired_tm, 
                           diff, 
-                          Homodimer){
+                          Homodimer,
+                          hairpin){
   df
   for (i in 1:length(df[[2]])){
-    df[[2]][[i]] <- df[[2]][[i]][unlist(sapply(df[[2]][[i]], calculate_homodimer)[1,]) == 1]
-    # df[[2]][[i]] <- df[[2]][[i]][unlist(sapply(df[[2]][[i]], calculate_hairpin)[1,]) == 0]
+    df[[2]][[i]] <- df[[2]][[i]][unlist(sapply(df[[2]][[i]], calculate_homodimer)[2,]) < Homodimer]
+    df[[2]][[i]] <- df[[2]][[i]][unlist(sapply(df[[2]][[i]], calculate_hairpin)[2,]) < hairpin]
     df[[2]][[i]] <- df[[2]][[i]][unlist(sapply(df[[2]][[i]], calculate_tm)) < desired_tm + diff]
     df[[2]][[i]] <- df[[2]][[i]][unlist(sapply(df[[2]][[i]], calculate_tm)) > desired_tm - diff]
     if (length(df[[2]][[i]]) == 0){
@@ -372,13 +373,14 @@ stage1_filter <- function(df,
   for (i in 1:length(df[[3]])){
     if (length(df[[3]][[i]]) != 0){
       df[[3]][[i]] <- df[[3]][[i]][unlist(sapply(df[[3]][[i]], calculate_tm)) > desired_tm - diff]
-      df[[3]][[i]] <- df[[3]][[i]][unlist(sapply(df[[3]][[i]], calculate_hairpin)[1,]) == 0]}
+      df[[3]][[i]] <- df[[3]][[i]][unlist(sapply(df[[3]][[i]], calculate_hairpin)[2,]) < hairpin]
+      }
   }
   df
   
   for (i in 1:length(df[[3]])){
     if (length(df[[3]][[i]]) != 0){
-      df[[3]][[i]] <- df[[3]][[i]][unlist(sapply(df[[3]][[i]], calculate_homodimer)[1,]) == 1]
+      df[[3]][[i]] <- df[[3]][[i]][unlist(sapply(df[[3]][[i]], calculate_homodimer)[2,]) < Homodimer]
       df[[3]][[i]] <- df[[3]][[i]][unlist(sapply(df[[3]][[i]], calculate_tm)) < desired_tm + diff]
     }
   }
