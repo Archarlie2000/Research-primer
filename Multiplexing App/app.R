@@ -108,7 +108,7 @@ server <- function(input, output) {
   # shift = 100
   # desired_tm = 60
   # diff = 5
-  # Heterodimer_tm = -5
+  # Heterodimer_tm = 15
   Homodimer <- 45
   hairpin <- 45
 
@@ -161,7 +161,7 @@ server <- function(input, output) {
                              shift)
     
     df
-    print("Primer generate")
+    print("Primer generated")
     return(df)
   }
   
@@ -243,7 +243,7 @@ server <- function(input, output) {
                                 incoming_list(arranged_list[[3]])
     )
     
-    # str(level3)
+    str(level3)
     # arranged_list
     # Running
     print(length(arranged_list))
@@ -296,6 +296,16 @@ server <- function(input, output) {
     
     # This handle what part of the tree we want to show
     level5 <- get_display_tree(level3, 3)
+    
+    repeated_list <- rep(df[[1]], each = 2)
+    
+    suffix <- c("_forward", "_reverse")
+    
+    # Append the suffixes to the repeated items
+    modified_list <- paste0(repeated_list, suffix[rep(1:length(suffix), length.out = length(repeated_list))])
+    
+    
+    rownames(level5) <- modified_list
     
     return(level5)
   }
