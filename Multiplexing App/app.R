@@ -73,11 +73,10 @@ ui <- dashboardPage(
       menuItem("Analysis", tabName = "Analysis", icon = icon("th")),
       menuItem("Selection", tabName = "Selection", icon = icon("th")),
       textInput(inputId = "primer_list", label = "Enter SNP", value = "rs17025867, rs9939609, rs7903146, rs1121980, rs76141775"),
-      numericInput(inputId = "shift", label = "Shift (bp)", value = 600),
+      numericInput(inputId = "shift", label = "Shift (bp)", value = 100),
       numericInput(inputId = "desired_tm", label = "desired_tm (°C)", value = 60),
-      sliderInput("diff", "Max difference in TM", 1, 5, 2),
-      sliderInput("Homodimer_tm", "Homodimer (°C)", -20, 5, 0),
-      sliderInput("Heterodimer_tm", "Heterodimer (°C)", -20, 5, -5)
+      sliderInput("diff", "Max difference in TM", 1, 10, 5),
+      numericInput(inputId = "Heterodimer_tm", label = "Heterodimer (°C)", value = 15)
     )
   ),
   dashboardBody(
@@ -108,10 +107,10 @@ server <- function(input, output) {
   # primer = "rs17025867, rs9939609, rs7903146, rs1121980, rs76141775"
   # shift = 100
   # desired_tm = 60
-  # diff = 2
+  # diff = 5
   # Heterodimer_tm = -5
-  # Homodimer <- 45
-  # hairpin <- 45
+  Homodimer <- 45
+  hairpin <- 45
 
   ## The main function
   mart_api <- function(primer,
@@ -201,7 +200,7 @@ server <- function(input, output) {
     
     
     ###
-    top <- 7
+    top <- 2
     
     print("Tree search")
     
