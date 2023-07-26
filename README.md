@@ -2,19 +2,7 @@
 
 This dashboard select appropriate primers set for multiplexing of SNP DNA mutation within human.  body. The primers are used to build a metabolic panel for assessing genetic predisposition of metabolic diseases such as obesity, high blood pressure, and hyperglycemia. This R shiny served as a substitute for primer3 program itself.
 
-Web version: https://vw8ids-archarlie-chou.shinyapps.io/Clone_move_on/
-
-## References
-
-Python wrapper (Mainly about the data programming structure): 
-https://libnano.github.io/primer3-py/api/bindings.html#primer3.bindings.calc_heterodimer
-
-
-Primer3 manual (I use it to how it calculates the functions):
-https://primer3.org/manual.html#PRIMER_MAX_HAIRPIN_TH
-
-Primer 3 in python module  https://github.com/jensenlab/primer3
-
+Web version: https://vw8ids-archarlie-chou.shinyapps.io/Clone_move_
 ## Attention
 
 Welcome to the documentation for the multiplexing algorithm used in my project. As you delve into this codebase, I want to highlight some important issues that you should be aware of and consider addressing:
