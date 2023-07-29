@@ -72,11 +72,13 @@ ui <- dashboardPage(
       menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard")),
       menuItem("Analysis", tabName = "Analysis", icon = icon("th")),
       menuItem("Selection", tabName = "Selection", icon = icon("th")),
-      textInput(inputId = "primer_list", label = "Enter SNP", value = "rs17025867, rs9939609, rs7903146, rs1121980, rs76141775"),
+      textInput(inputId = "primer_list", label = "Enter SNP", value = "rs1518739, rs6152"),
       numericInput(inputId = "shift", label = "Shift (bp)", value = 100),
       numericInput(inputId = "desired_tm", label = "desired_tm (°C)", value = 60),
       sliderInput("diff", "Max difference in TM", 1, 10, 5),
-      numericInput(inputId = "Heterodimer_tm", label = "Heterodimer (°C)", value = 15)
+      numericInput(inputId = "Heterodimer_tm", label = "Heterodimer (°C)", value = 15),
+      numericInput(inputId = "Homodimer", label = "Homodimer (°C)", value = 45),
+      numericInput(inputId = "top", label = "Top", value = 2)
     )
   ),
   dashboardBody(
@@ -90,18 +92,18 @@ ui <- dashboardPage(
       # Second tab content
       tabItem(tabName = "Analysis",
               downloadButton("downloadData", "Download"))
-            ),
-      tabItem(tabName = "Selection",
-
-          DT::dataTableOutput(outputId = "multiplex_table"),
-                )
-          )
+    ),
+    tabItem(tabName = "Selection",
+            
+            DT::dataTableOutput(outputId = "multiplex_table"),
+    )
+  )
 )
 
 
 # Define server logic required to draw a histogram
 server <- function(input, output) {
-
+  
   # These are the paramters used for trouble shooting
   
   # primer = "rs17025867, rs9939609, rs7903146, rs1121980, rs76141775"
@@ -109,9 +111,9 @@ server <- function(input, output) {
   # desired_tm = 60
   # diff = 5
   # Heterodimer_tm = 15
-  Homodimer <- 45
+  # Homodimer <- 45
   hairpin <- 45
-
+  
   ## The main function
   mart_api <- function(primer,
                        shift){
@@ -149,7 +151,7 @@ server <- function(input, output) {
     
     # Rename columns and data frame
     colnames(snp_wrangled) = c("snpID", "sequence")
-
+    
     
     ### I have a long long string. I want to get the left 18~25 charactors and 
     # between 300 ~ 800 units away, I want another 18 ~ 25
@@ -168,7 +170,8 @@ server <- function(input, output) {
   get_filter <- function(df,
                          desired_tm,
                          diff,
-                         Homodimer_tm) {
+                         Homodimer_tm,
+                         Homodimer) {
     
     print("R get filter activated")
     df <- stage1_filter(df, desired_tm, diff, Homodimer, hairpin)
@@ -188,7 +191,8 @@ server <- function(input, output) {
   }
   
   get_multiplex <- function(df,
-                            Heterodimer_tm){
+                            Heterodimer_tm,
+                            top){
     
     
     ## I have left and right primers for each SNP. Sometimes, I only
@@ -232,7 +236,7 @@ server <- function(input, output) {
     level2 <- list()
     level3 <- list()
     level4 <- list()
-  
+    
     level2 <- incoming_list(arranged_list[[1]])
     
     level3 <- replace_end_nodes(incoming_list(arranged_list[[1]]),
@@ -266,8 +270,8 @@ server <- function(input, output) {
       
       # Remove bad nodes if there are any
       if (length(bad_nodes) != 0){
-      level3 <- Iterate_remove(level3,bad_nodes)
-      level3 <- remove_empty_lists(level3)
+        level3 <- Iterate_remove(level3,bad_nodes)
+        level3 <- remove_empty_lists(level3)
       }
       
       
@@ -283,7 +287,7 @@ server <- function(input, output) {
       if (1){
         level4 <- incoming_list(arranged_list[[i]])
         print(paste("New list: ", length(level4)))
-      
+        
         level3 <- replace_end_nodes(level3, level4)
         print(paste("level3 + level4: ", length(get_endpoints(level3))))
       }
@@ -315,13 +319,14 @@ server <- function(input, output) {
   masterTable <- reactive(get_filter(unfiltered(),
                                      input$desired_tm,
                                      input$diff,
-                                     input$Homodimer_tm
-                                     ))
+                                     input$Homodimer_tm,
+                                     input$Homodimer
+  ))
   
   # This produced the raw table that has not beend filtered
   unfiltered <- reactive(mart_api(input$primer_list,
                                   input$shift))
-
+  
   
   # This produce summary of primer generations
   output$primer_table <- renderDataTable(
@@ -333,9 +338,10 @@ server <- function(input, output) {
   
   # THis produces the result of multiplexing
   output$multiplex_table <- renderDataTable(get_multiplex(masterTable(),
-                                                          input$Heterodimer_tm)
+                                                          input$Heterodimer_tm,
+                                                          input$top)
   )
-
+  
   
   # Download dataframe
   output$downloadData <- downloadHandler(
