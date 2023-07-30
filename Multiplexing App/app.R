@@ -66,18 +66,18 @@ source("functions.R")
 options(repos = BiocManager::repositories())
 
 ui <- dashboardPage(
-  dashboardHeader(title = "Multiplexing"),
+  dashboardHeader(title = "Acorn Finder"),
   dashboardSidebar(
     sidebarMenu(
       menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard")),
       menuItem("Analysis", tabName = "Analysis", icon = icon("th")),
       menuItem("Selection", tabName = "Selection", icon = icon("th")),
-      textInput(inputId = "primer_list", label = "Enter SNP", value = "rs1518739, rs6152"),
+      textInput(inputId = "primer_list", label = "Enter SNP", value = "rs1815739, rs333, rs1799971, rs4680"),
       numericInput(inputId = "shift", label = "Shift (bp)", value = 100),
-      numericInput(inputId = "desired_tm", label = "desired_tm (°C)", value = 60),
-      sliderInput("diff", "Max difference in TM", 1, 10, 5),
-      numericInput(inputId = "Heterodimer_tm", label = "Heterodimer (°C)", value = 15),
-      numericInput(inputId = "Homodimer", label = "Homodimer (°C)", value = 45),
+      numericInput(inputId = "desired_tm", label = "desired_tm (°C)", value = 64),
+      sliderInput("diff", "Max difference in TM", 1, 10, 3),
+      numericInput(inputId = "Heterodimer_tm", label = "Heterodimer (°C)", value = 25),
+      numericInput(inputId = "Homodimer", label = "Homodimer (°C)", value = 20),
       numericInput(inputId = "top", label = "Top", value = 2)
     )
   ),
