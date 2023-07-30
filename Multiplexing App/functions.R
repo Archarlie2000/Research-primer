@@ -348,6 +348,13 @@ all_text_warngling <- function(snp_wrangled,
   
   grouped_sequences$faraway <- grouped_sequences_far$substrings
   grouped_sequences <-  grouped_sequences[, -2]
+  
+  
+  grouped_sequences$direction <- duplicated(grouped_sequences[[1]]) 
+  
+  grouped_sequences <- grouped_sequences %>%
+    mutate(direction = ifelse(direction == FALSE, "LEFT", "RIGHT"))
+  
   return(grouped_sequences)
 }
 
@@ -420,6 +427,7 @@ get_display_tree <- function(level3, keep){
   for (i in 1:keep){
     display_tree <- c(display_tree, list(unlist(endpoints[[i]])))
   }
+  
   display_tree <- data.frame(display_tree)
   colnames(display_tree) <- paste0("Option ", seq(1, keep))
   
@@ -429,5 +437,96 @@ get_display_tree <- function(level3, keep){
 
 
 
+soulofmultiplex <- function(df, Heterodimer_tm){
+  list_3 <- list()
+  
+  for (i in 1:length(df[[1]])){
+    list_3 <- c(list_3, 
+                list(unlist(df[[4]][[i]])), 
+                list(unlist(df[[5]][[i]])))
+  }
+  
+  # Arrange the list from small to big
+  arranged_list <- list_3
+  
+  # Prepare the initial list for multiplexing
+  level2 <- list()
+  level3 <- list()
+  level4 <- list()
+  
+  level2 <- incoming_list(arranged_list[[1]])
+  
+  level3 <- replace_end_nodes(incoming_list(arranged_list[[1]]),
+                              incoming_list(arranged_list[[2]])
+  )
+  
+  level3 <- replace_end_nodes(level3,
+                              incoming_list(arranged_list[[3]])
+  )
+  
+  str(level3)
+  # arranged_list
+  # Running
+  print(length(arranged_list))
+  for (i in 4:length(arranged_list)){
+    
+    # Start a timer
+    start_time <- Sys.time()
+    
+    # Get all the end points from the tree
+    endpoints <- get_endpoints(level3)
+    
+    # Endpoints come back a little messy
+    endpoints <- clean_endpoints(endpoints)
+    print(paste("Start with ", length(endpoints)))
+    
+    # Evalauate all the ned points to its parents
+    bad_nodes <- compute_bad_nodes(endpoints, Heterodimer_tm)
+    print(paste("We are removing: ", length(bad_nodes)))
+    
+    
+    # Remove bad nodes if there are any
+    if (length(bad_nodes) != 0){
+      level3 <- Iterate_remove(level3,bad_nodes)
+      level3 <- remove_empty_lists(level3)
+    }
+    
+    
+    # If all nodes are bad, return NULL
+    if (length(endpoints) == length(bad_nodes)){
+      print("All nodes are removed during the process")
+      return(NULL)
+    }
+    
+    print(paste("After trimming: ", length(get_endpoints(level3))))
+    
+    # Stop adding list if we are at the last level
+    if (1){
+      level4 <- incoming_list(arranged_list[[i]])
+      print(paste("New list: ", length(level4)))
+      
+      level3 <- replace_end_nodes(level3, level4)
+      print(paste("level3 + level4: ", length(get_endpoints(level3))))
+    }
+    
+    # Summarize results for this level
+    print(paste("How far are we: ", i))
+    print(paste("Time" , round(Sys.time() - start_time, 1)))
+    print("--------------------------")
+  }
+  
+  level5 <- get_display_tree(level3, 3)
+  repeated_list <- rep(df[[1]], each = 2)
+  suffix <- c("_forward", "_reverse")
+  modified_list <- paste0(repeated_list, suffix[rep(1:length(suffix), length.out = length(repeated_list))])
+  rownames(level5) <- modified_list
+  
+  level5 <- rbind(level5, Tm = c(round(mean(sapply(level5[[1]], calculate_tm)), 2),
+                            round(mean(sapply(level5[[2]], calculate_tm)), 2),
+                            round(mean(sapply(level5[[3]], calculate_tm)),2)))
 
+  
+  return(level5)
+  
+}
 

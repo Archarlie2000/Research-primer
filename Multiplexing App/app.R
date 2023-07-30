@@ -106,13 +106,14 @@ server <- function(input, output) {
   
   # These are the paramters used for trouble shooting
   
-  # primer = "rs17025867, rs9939609, rs7903146, rs1121980, rs76141775"
-  # shift = 100
+  # primer = "rs1518739, rs6152"
+  # shift = 500
   # desired_tm = 60
   # diff = 5
   # Heterodimer_tm = 15
   # Homodimer <- 45
-  hairpin <- 45
+  # top <- 2
+  # hairpin <- 45
   
   ## The main function
   mart_api <- function(primer,
@@ -162,7 +163,10 @@ server <- function(input, output) {
                              far, 
                              shift)
     
+    
+    
     df
+    
     print("Primer generated")
     return(df)
   }
@@ -194,122 +198,22 @@ server <- function(input, output) {
                             Heterodimer_tm,
                             top){
     
-    
-    ## I have left and right primers for each SNP. Sometimes, I only
-    # Have left or right for some SNP. I need to arrange a list that 
-    # contain all SNP primers. However, for each set, it can be either
-    # from the left or from the right. I can make several tress.
-    # But how do I arrange list from the df?
-    #
-    
-    
-    ###
-    top <- 2
-    
     print("Tree search")
-    
+    df
     # Keep only certain amount of candidates
     df[[4]] <- extract_top_n(df[[4]], top)
     df[[5]] <- extract_top_n(df[[5]], top)
     
-    # This is a bug. I have not yet to figure out how to grwow
-    # multiple tree. So I just take whatever left and dispose 
-    # The other flanking direactions
-    df <- df %>% 
-      group_by(snpID) %>% 
-      slice(1)
+    df <- df %>%
+      group_by(snpID) %>%
+      filter(substrings_count == max(substrings_count))
     
     df
-    # Prepare the general list of multiplexing
-    list_3 <- list()
-    
-    for (i in 1:length(df[[1]])){
-      list_3 <- c(list_3, 
-                  list(unlist(df[[4]][[i]])), 
-                  list(unlist(df[[5]][[i]])))
-    }
-    
-    # Arrange the list from small to big
-    arranged_list <- list_3
-    
-    # Prepare the initial list for multiplexing
-    level2 <- list()
-    level3 <- list()
-    level4 <- list()
-    
-    level2 <- incoming_list(arranged_list[[1]])
-    
-    level3 <- replace_end_nodes(incoming_list(arranged_list[[1]]),
-                                incoming_list(arranged_list[[2]])
-    )
-    
-    level3 <- replace_end_nodes(level3,
-                                incoming_list(arranged_list[[3]])
-    )
-    
-    str(level3)
-    # arranged_list
-    # Running
-    print(length(arranged_list))
-    for (i in 4:length(arranged_list)){
-      
-      # Start a timer
-      start_time <- Sys.time()
-      
-      # Get all the end points from the tree
-      endpoints <- get_endpoints(level3)
-      
-      # Endpoints come back a little messy
-      endpoints <- clean_endpoints(endpoints)
-      print(paste("Start with ", length(endpoints)))
-      
-      # Evalauate all the ned points to its parents
-      bad_nodes <- compute_bad_nodes(endpoints, Heterodimer_tm)
-      print(paste("We are removing: ", length(bad_nodes)))
-      
-      
-      # Remove bad nodes if there are any
-      if (length(bad_nodes) != 0){
-        level3 <- Iterate_remove(level3,bad_nodes)
-        level3 <- remove_empty_lists(level3)
-      }
-      
-      
-      # If all nodes are bad, return NULL
-      if (length(endpoints) == length(bad_nodes)){
-        print("All nodes are removed during the process")
-        return(NULL)
-      }
-      
-      print(paste("After trimming: ", length(get_endpoints(level3))))
-      
-      # Stop adding list if we are at the last level
-      if (1){
-        level4 <- incoming_list(arranged_list[[i]])
-        print(paste("New list: ", length(level4)))
-        
-        level3 <- replace_end_nodes(level3, level4)
-        print(paste("level3 + level4: ", length(get_endpoints(level3))))
-      }
-      
-      # Summarize results for this level
-      print(paste("How far are we: ", i))
-      print(paste("Time" , round(Sys.time() - start_time, 1)))
-      print("--------------------------")
-    }
-    
-    # This handle what part of the tree we want to show
-    level5 <- get_display_tree(level3, 3)
-    
-    repeated_list <- rep(df[[1]], each = 2)
-    
-    suffix <- c("_forward", "_reverse")
-    
-    # Append the suffixes to the repeated items
-    modified_list <- paste0(repeated_list, suffix[rep(1:length(suffix), length.out = length(repeated_list))])
     
     
-    rownames(level5) <- modified_list
+    level5 <- soulofmultiplex(df, Heterodimer_tm)
+    
+    
     
     return(level5)
   }
