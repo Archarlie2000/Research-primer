@@ -429,6 +429,12 @@ get_display_tree <- function(level3, keep){
   }
   
   display_tree <- data.frame(display_tree)
+  
+  first_row <- display_tree[1, ]
+  display_tree <- display_tree[-1, ]
+  
+  display_tree <- rbind(display_tree, first_row)
+  
   colnames(display_tree) <- paste0("Option ", seq(1, keep))
   
   
