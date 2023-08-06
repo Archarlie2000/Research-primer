@@ -72,13 +72,14 @@ ui <- dashboardPage(
       menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard")),
       menuItem("Analysis", tabName = "Analysis", icon = icon("th")),
       menuItem("Selection", tabName = "Selection", icon = icon("th")),
-      textInput(inputId = "primer_list", label = "Enter SNP", value = "rs1815739, rs333, rs1799971, rs4680"),
+      textInput(inputId = "primer_list", label = "Enter SNP", value = "rs53576, rs1815739, rs7412, rs429358, rs6152"),
       numericInput(inputId = "shift", label = "Shift (bp)", value = 100),
-      numericInput(inputId = "desired_tm", label = "desired_tm (°C)", value = 64),
-      sliderInput("diff", "Max difference in TM", 1, 10, 3),
-      numericInput(inputId = "Heterodimer_tm", label = "Heterodimer (°C)", value = 25),
-      numericInput(inputId = "Homodimer", label = "Homodimer (°C)", value = 20),
-      numericInput(inputId = "top", label = "Top", value = 2)
+      numericInput(inputId = "desired_tm", label = "desired_tm (°C)", value = 60),
+      sliderInput("diff", "Max difference in TM", 1, 10, 5),
+      numericInput(inputId = "Heterodimer_tm", label = "Heterodimer (°C)", value = 50),
+      numericInput(inputId = "Homodimer", label = "Homodimer (°C)", value = 30),
+      numericInput(inputId = "top", label = "Top", value = 2),
+      numericInput(inputId = "hairpin", label = "hairpin (°C)", value = 45)
     )
   ),
   dashboardBody(
@@ -106,20 +107,21 @@ server <- function(input, output) {
   
   # These are the paramters used for trouble shooting
   
-  # primer = "rs1518739, rs6152"
-  # shift = 500
+  # primer = "rs53576, rs1815739, rs7412, rs429358, rs6152"
+  # shift = 100
   # desired_tm = 60
   # diff = 5
-  # Heterodimer_tm = 15
+  # Heterodimer_tm = 50
   # Homodimer <- 45
   # top <- 2
-  # hairpin <- 45
+  
   
   ## The main function
   mart_api <- function(primer,
                        shift){
     
     center <- 800
+    hairpin <- 45
     far <- 200
     start_distance <- 15
     end_distance <- 30
@@ -175,11 +177,12 @@ server <- function(input, output) {
                          desired_tm,
                          diff,
                          Homodimer_tm,
-                         Homodimer) {
+                         Homodimer,
+                         hairpin) {
     
     print("R get filter activated")
     df <- stage1_filter(df, desired_tm, diff, Homodimer, hairpin)
-    df
+    print(df)
     
     print("Filtered")
     
@@ -208,11 +211,11 @@ server <- function(input, output) {
       group_by(snpID) %>%
       filter(substrings_count == max(substrings_count))
     
-    df
+    print(df)
     
     
     level5 <- soulofmultiplex(df, Heterodimer_tm)
-    
+    print(level5)
     
     
     return(level5)
@@ -224,7 +227,8 @@ server <- function(input, output) {
                                      input$desired_tm,
                                      input$diff,
                                      input$Homodimer_tm,
-                                     input$Homodimer
+                                     input$Homodimer,
+                                     input$hairpin
   ))
   
   # This produced the raw table that has not beend filtered
