@@ -359,7 +359,7 @@ all_text_warngling <- function(snp_wrangled,
 }
 
 
-# Apply all the filter before multiplexing
+# Apply all the filters before multiplexing
 stage1_filter <- function(df, 
                           desired_tm, 
                           diff, 

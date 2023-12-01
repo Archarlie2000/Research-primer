@@ -30,7 +30,9 @@
 # install.packages("rsconnect")
 # install.packages("shinydashboard")
 
-
+# Probe
+library(rprimer)
+#library(Biostrings)
 
 # Data processing
 library(DT)
@@ -58,6 +60,7 @@ library(primer3)
 # Deployment
 library(shinydashboard)
 library(shiny)
+
 
 source("functions.R")
 
@@ -116,7 +119,7 @@ server <- function(input, output) {
   # top <- 2
   
   
-  ## The main function
+  ## The main function - generates our primers
   mart_api <- function(primer,
                        shift){
     
@@ -173,25 +176,26 @@ server <- function(input, output) {
     return(df)
   }
   
-  get_filter <- function(df,
+  get_filter <- function(df, # primer
                          desired_tm,
-                         diff,
-                         Homodimer_tm,
+                         diff, # max diff in tm
+                         Heterodimer_tm, # should this be heterodimer_tm?
                          Homodimer,
                          hairpin) {
     
     print("R get filter activated")
+    # Applied filters before multiplexing
     df <- stage1_filter(df, desired_tm, diff, Homodimer, hairpin)
     print(df)
     
     print("Filtered")
     
     
-    # Count how many candidates there are for each candidates
+    # Count how many candidates there are for each primer group
     df <- df %>%
       mutate(substrings_count = lengths(substrings),
              faraway_count = lengths(faraway)) %>%
-      relocate(snpID, substrings_count, faraway_count, everything())
+      relocate(snpID, substrings_count, faraway_count, everything()) # Moves a block of columns
     
     # Display the updated nested tibble
     return(df)
@@ -222,11 +226,11 @@ server <- function(input, output) {
   }
   
   
-  # This one produce the true table we used
+  # This one produces the true table we used
   masterTable <- reactive(get_filter(unfiltered(),
                                      input$desired_tm,
                                      input$diff,
-                                     input$Homodimer_tm,
+                                     input$Heterodimer_tm,
                                      input$Homodimer,
                                      input$hairpin
   ))
@@ -244,7 +248,7 @@ server <- function(input, output) {
   # output$primer_table <- renderDataTable(mtcars)
   
   
-  # THis produces the result of multiplexing
+  # This produces the result of multiplexing
   output$multiplex_table <- renderDataTable(get_multiplex(masterTable(),
                                                           input$Heterodimer_tm,
                                                           input$top)
