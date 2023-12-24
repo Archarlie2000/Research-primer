@@ -324,6 +324,9 @@ all_text_warngling <- function(snp_wrangled,
                                far, 
                                shift){
   
+  ## extrac the candidate from the left side (upstream) of the SNP
+  ## extrac the candidate from the right side (downstream) of the SNP
+  ## We are only getting the primers that are closed to the SNP for now
   grouped_sequences <- snp_wrangled %>%
     group_by(snpID) %>%
     summarize(sequence_list = list(sequence)) %>% 
@@ -466,6 +469,8 @@ soulofmultiplex <- function(df, Heterodimer_tm){
                               incoming_list(arranged_list[[2]])
   )
   
+  if (length(arranged_list) != 2) {
+  
   level3 <- replace_end_nodes(level3,
                               incoming_list(arranged_list[[3]])
   )
@@ -519,6 +524,7 @@ soulofmultiplex <- function(df, Heterodimer_tm){
     print(paste("How far are we: ", i))
     print(paste("Time" , round(Sys.time() - start_time, 1)))
     print("--------------------------")
+  }
   }
   
   level5 <- get_display_tree(level3, 3)

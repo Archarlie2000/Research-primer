@@ -30,6 +30,8 @@
 # install.packages("rsconnect")
 # install.packages("shinydashboard")
 
+# you mush downgrade your dbplyr package to avoid conflict with biomart
+# devtools::install_version("dbplyr", version = "2.3.4")
 
 
 # Data processing
@@ -60,8 +62,6 @@ library(shinydashboard)
 library(shiny)
 
 source("functions.R")
-
-
 
 options(repos = BiocManager::repositories())
 
@@ -106,22 +106,25 @@ ui <- dashboardPage(
 server <- function(input, output) {
   
   # These are the paramters used for trouble shooting
-  
-  # primer = "rs53576, rs1815739, rs7412, rs429358, rs6152"
+
+  # primer = "rs1121980, rs9939609, rs1421085, rs17817449"
+  # primer = "rs1121980"
   # shift = 100
   # desired_tm = 60
   # diff = 5
   # Heterodimer_tm = 50
   # Homodimer <- 45
   # top <- 2
-  
+
   
   ## The main function
   mart_api <- function(primer,
                        shift){
-    
+
+    # We will start exploring options 800 bp away from the SNP location upstream and downstream    
     center <- 800
     hairpin <- 45
+    # from that distance of 800, we will search the range from 600 to 1,000. (800+200 and 800-200)
     far <- 200
     start_distance <- 15
     end_distance <- 30
@@ -231,7 +234,7 @@ server <- function(input, output) {
                                      input$hairpin
   ))
   
-  # This produced the raw table that has not beend filtered
+  # This produced the raw table that has not been filtered
   unfiltered <- reactive(mart_api(input$primer_list,
                                   input$shift))
   
@@ -240,15 +243,15 @@ server <- function(input, output) {
   output$primer_table <- renderDataTable(
     masterTable()[c(1,2,3)]
   )
+
   
-  # output$primer_table <- renderDataTable(mtcars)
-  
-  
-  # THis produces the result of multiplexing
+  # This produces the result of multiplexing
   output$multiplex_table <- renderDataTable(get_multiplex(masterTable(),
                                                           input$Heterodimer_tm,
                                                           input$top)
   )
+  
+  # output$multiplex_table <- renderDataTable(mtcars)
   
   
   # Download dataframe
