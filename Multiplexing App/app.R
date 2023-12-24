@@ -111,8 +111,7 @@ server <- function(input, output) {
   
   # These are the paramters used for trouble shooting
 
-  # primer = "rs1121980, rs9939609, rs1421085, rs17817449"
-  # primer = "rs1121980"
+  # primer = "rs53576, rs1815739, rs7412, rs429358, rs6152"
   # shift = 100
   # desired_tm = 60
   # diff = 5
@@ -224,9 +223,12 @@ server <- function(input, output) {
     
     level5 <- soulofmultiplex(df, Heterodimer_tm)
     print(level5)
+  
     
+    level5_with_tm_result <- get_tm_for_all_primers(level5)
+
     
-    return(level5)
+    return(level5_with_tm_result)
   }
   
   

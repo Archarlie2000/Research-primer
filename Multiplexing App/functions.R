@@ -542,3 +542,29 @@ soulofmultiplex <- function(df, Heterodimer_tm){
   
 }
 
+
+get_tm_for_all_primers <- function(level5) {
+  
+  
+  level5_with_tm_result <- data.frame(matrix(NA, nrow = nrow(level5), ncol = 0))
+  
+  # Apply the 'calculate_tm' function to each column of the dataframe
+  for (i in seq_along(level5)) {
+    # Calculate TM for the column and round the result
+    tm_results <- round(calculate_tm(level5[[i]]), 2)
+    
+    # Combine the original column with the TM results
+    combined <- data.frame(level5[[i]], tm_results)
+    
+    # Set the column names for the combined columns
+    original_col_name <- names(level5)[i]
+    names(combined) <- c(original_col_name, paste0(original_col_name, "_tm"))
+    
+    # Bind the new combined columns to the result dataframe
+    level5_with_tm_result <- cbind(level5_with_tm_result, combined)
+  }
+  
+  # Remove the first column if it contains only NA values from the placeholder creation
+  level5_with_tm_result <- level5_with_tm_result[, colSums(is.na(level5_with_tm_result)) < nrow(level5_with_tm_result)]
+  
+}
