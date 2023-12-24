@@ -68,6 +68,8 @@ library(shiny)
 source("functions.R")
 
 options(repos = BiocManager::repositories())
+options(scipen = 999)
+
 
 ui <- dashboardPage(
   dashboardHeader(title = "Acorn Finder"),
@@ -110,14 +112,14 @@ ui <- dashboardPage(
 server <- function(input, output) {
   
   # These are the paramters used for trouble shooting
-
-  # primer = "rs53576, rs1815739, rs7412, rs429358, rs6152"
-  # shift = 100
-  # desired_tm = 60
-  # diff = 5
-  # Heterodimer_tm = 50
-  # Homodimer <- 45
-  # top <- 2
+# 
+# primer = "rs53576, rs1815739, rs7412, rs429358, rs6152"
+# shift = 100
+# desired_tm = 64
+# diff = 3
+# Heterodimer_tm = 50
+# Homodimer <- 45
+# top <- 2
 
   
   ## The main function - generates our primers
@@ -170,10 +172,8 @@ server <- function(input, output) {
                              center, 
                              far, 
                              shift)
-    
-    
-    
     df
+    
     
     print("Primer generated")
     return(df)
@@ -213,6 +213,10 @@ server <- function(input, output) {
     # Keep only certain amount of candidates
     df[[4]] <- extract_top_n(df[[4]], top)
     df[[5]] <- extract_top_n(df[[5]], top)
+    # Techincal debt
+    df <- df[!duplicated(df$snpID), ]
+    
+    
     
     df <- df %>%
       group_by(snpID) %>%
@@ -226,7 +230,7 @@ server <- function(input, output) {
   
     
     level5_with_tm_result <- get_tm_for_all_primers(level5)
-
+    
     
     return(level5_with_tm_result)
   }

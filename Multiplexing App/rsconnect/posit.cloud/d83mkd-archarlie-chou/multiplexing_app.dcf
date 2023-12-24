@@ -5,8 +5,9 @@ account: d83mkd-archarlie-chou
 server: posit.cloud
 hostUrl: https://api.posit.cloud/v1
 appId: 6937427
-bundleId:
+bundleId: 8081357
 url: https://posit.cloud/content/6937427
 version: 1
 asMultiple: FALSE
 asStatic: FALSE
+ignoredFiles: dynamicprogrmaingfunction.R|getdata.py|getfilter.py|metadata.csv|multiplexfunction.R|multithreading.R|RealTree.R|recursive_tree_search.R|rewritetext wranling.R|scratch paper.R|test 2.R|Tree_function.R

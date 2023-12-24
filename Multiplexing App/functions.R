@@ -369,14 +369,59 @@ stage1_filter <- function(df,
                           Homodimer,
                           hairpin){
   df
+  
+  # This is the soft filter. We first make sure there is leftafter after the filtering. If not, we keep the best option
   for (i in 1:length(df[[2]])){
-    df[[2]][[i]] <- df[[2]][[i]][unlist(sapply(df[[2]][[i]], calculate_homodimer)[2,]) < Homodimer]
-    df[[2]][[i]] <- df[[2]][[i]][unlist(sapply(df[[2]][[i]], calculate_hairpin)[2,]) < hairpin]
-    df[[2]][[i]] <- df[[2]][[i]][unlist(sapply(df[[2]][[i]], calculate_tm)) < desired_tm + diff]
-    df[[2]][[i]] <- df[[2]][[i]][unlist(sapply(df[[2]][[i]], calculate_tm)) > desired_tm - diff]
-    if (length(df[[2]][[i]]) == 0){
-      length(df[[3]][[i]]) <- 0
+    
+    # Homodimer
+    k = df[[2]][[i]][unlist(sapply(df[[2]][[i]], calculate_homodimer)[2,]) < Homodimer]
+    if (length(k) > 5) {
+      df[[2]][[i]] <- df[[2]][[i]][unlist(sapply(df[[2]][[i]], calculate_homodimer)[2,]) < Homodimer]
+    }else{
+      print(paste("Homodimer - Bottle neck", df[[1]][[i]]))
+      calculated_values <- sapply(df[[2]][[i]], calculate_homodimer)
+      differences <- abs(unlist(calculated_values[2,]) - Homodimer)
+      min_diff_indices <- order(differences)[1:min(5, length(differences))]
+      df[[2]][[i]] <- df[[2]][[i]][min_diff_indices]
     }
+    
+    # Hairpin
+    k = df[[2]][[i]][unlist(sapply(df[[2]][[i]], calculate_hairpin)[2,]) < hairpin]
+    if (length(k) > 5) {
+      df[[2]][[i]] <- df[[2]][[i]][unlist(sapply(df[[2]][[i]], calculate_hairpin)[2,]) < hairpin]
+    }else{
+      print(paste("Hairpin - Bottle neck", df[[1]][[i]]))
+      calculated_values <- sapply(df[[2]][[i]], calculate_hairpin)
+      differences <- abs(unlist(calculated_values[2,]) - hairpin)
+      min_diff_indices <- order(differences)[1:min(5, length(differences))]
+      df[[2]][[i]] <- df[[2]][[i]][min_diff_indices]
+    }
+    
+    # Filter Tm above target
+    k = df[[2]][[i]][unlist(sapply(df[[2]][[i]], calculate_tm)) < desired_tm + diff]
+    if (length(k) > 5) {
+      df[[2]][[i]] <- k
+    }else{
+      print(paste("Tm_above - Bottle neck", df[[1]][[i]]))
+      calculated_values <- sapply(df[[2]][[i]], calculate_tm)
+      differences <- abs(unlist(calculated_values) - (desired_tm + diff) )
+      min_diff_indices <- order(differences)[1:min(5, length(differences))]
+      df[[2]][[i]] <- df[[2]][[i]][min_diff_indices]
+    }
+    
+    # df[[2]][[i]] <- df[[2]][[i]][unlist(sapply(df[[2]][[i]], calculate_tm)) > desired_tm - diff]
+    # Filter Tm below target
+    k = df[[2]][[i]][unlist(sapply(df[[2]][[i]], calculate_tm)) > desired_tm - diff]
+    if (length(k) > 5) {
+      df[[2]][[i]] <- k
+    }else{
+      print(paste("TM below - Bottle neck", df[[1]][[i]]))
+      calculated_values <- sapply(df[[2]][[i]], calculate_tm)
+      differences <- abs(unlist(calculated_values) - (desired_tm - diff) )
+      min_diff_indices <- order(differences)[1:min(5, length(differences))]
+      df[[2]][[i]] <- df[[2]][[i]][min_diff_indices]
+    }
+    
   }
   df
   
@@ -394,6 +439,7 @@ stage1_filter <- function(df,
       df[[3]][[i]] <- df[[3]][[i]][unlist(sapply(df[[3]][[i]], calculate_tm)) < desired_tm + diff]
     }
   }
+  
   df
   for (i in length(df[[1]]):1){
     if (length(df[[2]][[i]]) == 0){
@@ -566,5 +612,6 @@ get_tm_for_all_primers <- function(level5) {
   
   # Remove the first column if it contains only NA values from the placeholder creation
   level5_with_tm_result <- level5_with_tm_result[, colSums(is.na(level5_with_tm_result)) < nrow(level5_with_tm_result)]
-  
+  rownames(level5_with_tm_result) <- rownames(level5)
+  level5_with_tm_result <- as.matrix(level5_with_tm_result)
 }
