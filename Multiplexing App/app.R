@@ -88,7 +88,7 @@ ui <- dashboardPage(
       numericInput(inputId = "Heterodimer_tm", label = "Heterodimer (°C)", value = 50),
       numericInput(inputId = "Homodimer", label = "Homodimer (°C)", value = 30),
       numericInput(inputId = "top", label = "Top", value = 2),
-      numericInput(inputId = "hairpin", label = "hairpin (°C)", value = 45),
+      numericInput(inputId = "hairpin", label = "Max Hairpin (°C)", value = 45),
       downloadButton("downloadData", "Download")
     )
   ),
@@ -100,25 +100,34 @@ ui <- dashboardPage(
               HTML('<h2 style="padding-left: 20px; margin: 5px; font-size: 20px;">Acorn Finder is a comprehensive tool designed for rapid Allel-specific Multiplexing Primer Generation</h2>'),
               HTML('<hr style="border-top: 1px solid #ccc; margin-top: 10px; margin-bottom: 10px;">'),
               HTML('<h2 style="padding-left: 20px; margin: 5px; font-size: 20px;">1. Enter SNP IDs</h2>'),
-              textInput(inputId = "primer_list", label = "", value = "rs53576, rs1815739, rs7412, rs429358, rs6152"),
+              div(style = "padding-left: 30px;", textInput(inputId = "primer_list", label = "", value = "rs53576, rs1815739, rs7412, rs429358, rs6152")),
               # Existing Dashboard content
-              HTML('<h2 style="padding-left: 20px; margin: 5px; font-size: 20px;">2. Specify desired Tms</h2>'),
-              numericInput(inputId = "desired_tm", label = "desired_tm (°C)", value = 60),
+              HTML('<h2 style="padding-left: 20px; margin: 5px; font-size: 20px;">2. Specify Desired Tm (°C)</h2>'),
+              div(style = "padding-left: 30px;", sliderInput(inputId = "desired_tm", label = "", value = 60, min = 40, max = 80)),
               
-              HTML('<h2 style="padding-left: 20px; margin: 5px; font-size: 20px;">3. Specify Max Length</h2>'),
-              numericInput(inputId = "shift", label = "Max Length (bp)", value = 400),
+              HTML('<h2 style="padding-left: 20px; margin: 5px; font-size: 20px;">3. Specify Max Length (bp)</h2>'),
+              div(style = "padding-left: 30px;", sliderInput(inputId = "shift", label = "", value = 400, min = 100, max = 500)),
               
-              HTML('<h2 style="padding-left: 20px; margin: 5px; font-size: 20px;">4. Specify Tms tolerance</h2>'),
-              sliderInput("diff", "Max difference in TM", 1, 10, 5),
+              HTML('<h2 style="padding-left: 20px; margin: 5px; font-size: 20px;">4. Specify Max difference in TM</h2>'),
+              div(style = "padding-left: 30px;", sliderInput(inputId = "diff", label = "", value = 5, min = 0, max = 10)),
               
               HTML('<h2 style="padding-left: 20px; margin: 5px; font-size: 20px;">5. Adjust other filters as needed</h2>'),
-              actionButton("run_button", "Run Analysis", icon = icon("play")),
-              verbatimTextOutput("consoleOutput"),
+              div(style = "padding-left: 30px;", actionButton("run_button", "Run Analysis", icon = icon("play"))),
               
-              column(
-                withSpinner(DT::dataTableOutput(outputId = "primer_table")), 
-                width = 12),
-              withSpinner(DT::dataTableOutput(outputId = "multiplex_table")),
+              # verbatimTextOutput("consoleOutput"),
+              
+              HTML('<h2 style="padding-left: 20px; margin: 5px; font-size: 20px;">6. This table shows how many primers we are using from each SNP to perform multiplexing</h2>'),
+              div(style = "padding-left: 30px;", 
+                  column(
+                    withSpinner(DT::dataTableOutput(outputId = "primer_table")), 
+                    width = 12
+                  )
+              ),
+              HTML('<h2 style="padding-left: 20px; margin: 5px; font-size: 20px;">7. Final result</h2>'),
+              div(style = "padding-left: 30px;", 
+                  withSpinner(DT::dataTableOutput(outputId = "multiplex_table"))
+              )
+              
               
       )
       # Removed the About tab
@@ -317,14 +326,14 @@ server <- function(input, output) {
   
   
   # Download dataframe
-  output$downloadData <- downloadHandler(
-    filename = function() {
-      paste("Save a df", ".csv", sep = "")
-    },
-    content = function(file) {
-      write.csv(masterTable(), file, row.names = FALSE)
-    }
-  )
+  # output$downloadData <- downloadHandler(
+  #   filename = function() {
+  #     paste("Save a df", ".csv", sep = "")
+  #   },
+  #   content = function(file) {
+  #     write.csv(masterTable(), file, row.names = FALSE)
+  #   }
+  # )
 }
 
 # Run the application 
