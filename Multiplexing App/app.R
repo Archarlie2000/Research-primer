@@ -108,14 +108,13 @@ ui <- dashboardPage(
               HTML('<h2 style="padding-left: 20px; margin: 5px; font-size: 20px;">3. Specify Max Length (bp)</h2>'),
               div(style = "padding-left: 30px;", sliderInput(inputId = "shift", label = "", value = 400, min = 100, max = 500)),
               
-              HTML('<h2 style="padding-left: 20px; margin: 5px; font-size: 20px;">4. Specify Max difference in TM</h2>'),
+              HTML('<h2 style="padding-left: 20px; margin: 5px; font-size: 20px;">4. Specify Max difference in TM (°C)</h2>'),
               div(style = "padding-left: 30px;", sliderInput(inputId = "diff", label = "", value = 5, min = 0, max = 10)),
               
               HTML('<h2 style="padding-left: 20px; margin: 5px; font-size: 20px;">5. Adjust other filters as needed</h2>'),
               div(style = "padding-left: 30px;", actionButton("run_button", "Run Analysis", icon = icon("play"))),
               
               # verbatimTextOutput("consoleOutput"),
-              
               HTML('<h2 style="padding-left: 20px; margin: 5px; font-size: 20px;">6. This table shows how many primers we are using from each SNP to perform multiplexing</h2>'),
               div(style = "padding-left: 30px;", 
                   column(
@@ -127,8 +126,6 @@ ui <- dashboardPage(
               div(style = "padding-left: 30px;", 
                   withSpinner(DT::dataTableOutput(outputId = "multiplex_table"))
               )
-              
-              
       )
       # Removed the About tab
     )
@@ -194,9 +191,7 @@ server <- function(input, output) {
                           values = list(snp_list, upStream, downStream),
                           mart = snpmart,
                           bmHeader = TRUE)
-    
-    ### Wrangling dataframe
-    
+
     #Create a new data frame
     snp_wrangled <- data.frame(matrix(ncol = 2, nrow = 0))
     
