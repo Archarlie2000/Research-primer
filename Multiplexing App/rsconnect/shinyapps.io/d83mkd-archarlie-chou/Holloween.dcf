@@ -5,7 +5,7 @@ account: d83mkd-archarlie-chou
 server: shinyapps.io
 hostUrl: https://api.shinyapps.io/v1
 appId: 10376541
-bundleId: 8081369
+bundleId: 8098460
 url: https://d83mkd-archarlie-chou.shinyapps.io/Holloween/
 version: 1
 asMultiple: FALSE

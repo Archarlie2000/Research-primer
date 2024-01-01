@@ -1,0 +1,12 @@
+/* custom.css */
+.skin-blue .main-sidebar {
+    width: 800px; /* Adjust this value as needed */
+}
+
+.skin-blue .main-header .logo {
+    width: 800px; /* Adjust this value to be the same as the sidebar width */
+}
+
+.skin-blue .main-header .navbar {
+    margin-left: 800px; /* Adjust this value to be the same as the sidebar width */
+}

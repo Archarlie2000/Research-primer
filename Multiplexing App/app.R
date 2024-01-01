@@ -29,9 +29,11 @@
 # install.packages("shiny")
 # install.packages("rsconnect")
 # install.packages("shinydashboard")
+# install.packages("shinycssloaders")
 
 # you mush downgrade your dbplyr package to avoid conflict with biomart
 # devtools::install_version("dbplyr", version = "2.3.4")
+
 
 # Probe
 library(rprimer)
@@ -63,7 +65,7 @@ library(primer3)
 # Deployment
 library(shinydashboard)
 library(shiny)
-
+library(shinycssloaders)
 
 source("functions.R")
 
@@ -72,40 +74,59 @@ options(scipen = 999)
 
 
 ui <- dashboardPage(
-  dashboardHeader(title = "Acorn Finder"),
+  dashboardHeader(title = "Acorn Finder 12/24/2023"),
   dashboardSidebar(
+    tags$head(
+      tags$link(rel = "stylesheet", type = "text/css", href = "custom.css")
+    ),
     sidebarMenu(
       menuItem("Dashboard", tabName = "dashboard", icon = icon("dashboard")),
-      menuItem("Analysis", tabName = "Analysis", icon = icon("th")),
-      menuItem("Selection", tabName = "Selection", icon = icon("th")),
-      textInput(inputId = "primer_list", label = "Enter SNP", value = "rs53576, rs1815739, rs7412, rs429358, rs6152"),
-      numericInput(inputId = "shift", label = "Shift (bp)", value = 100),
-      numericInput(inputId = "desired_tm", label = "desired_tm (°C)", value = 60),
-      sliderInput("diff", "Max difference in TM", 1, 10, 5),
+      # actionButton("run_button", "Run Analysis", icon = icon("play")),
+      # numericInput(inputId = "shift", label = "Max Length (bp)", value = 400),
+      # numericInput(inputId = "desired_tm", label = "desired_tm (°C)", value = 60),
+      # sliderInput("diff", "Max difference in TM", 1, 10, 5),
       numericInput(inputId = "Heterodimer_tm", label = "Heterodimer (°C)", value = 50),
       numericInput(inputId = "Homodimer", label = "Homodimer (°C)", value = 30),
       numericInput(inputId = "top", label = "Top", value = 2),
-      numericInput(inputId = "hairpin", label = "hairpin (°C)", value = 45)
+      numericInput(inputId = "hairpin", label = "hairpin (°C)", value = 45),
+      downloadButton("downloadData", "Download")
     )
   ),
   dashboardBody(
-    
     tabItems(
-      # First tab content
       tabItem(tabName = "dashboard",
+              # Introduction and Instructions at the top
+              HTML('<h1 style="padding-left: 20px; margin: 5px; font-size: 80px;">Acorn Finder</h1>'),
+              HTML('<h2 style="padding-left: 20px; margin: 5px; font-size: 20px;">Acorn Finder is a comprehensive tool designed for rapid Allel-specific Multiplexing Primer Generation</h2>'),
+              HTML('<hr style="border-top: 1px solid #ccc; margin-top: 10px; margin-bottom: 10px;">'),
+              HTML('<h2 style="padding-left: 20px; margin: 5px; font-size: 20px;">1. Enter SNP IDs</h2>'),
+              textInput(inputId = "primer_list", label = "", value = "rs53576, rs1815739, rs7412, rs429358, rs6152"),
+              # Existing Dashboard content
+              HTML('<h2 style="padding-left: 20px; margin: 5px; font-size: 20px;">2. Specify desired Tms</h2>'),
+              numericInput(inputId = "desired_tm", label = "desired_tm (°C)", value = 60),
+              
+              HTML('<h2 style="padding-left: 20px; margin: 5px; font-size: 20px;">3. Specify Max Length</h2>'),
+              numericInput(inputId = "shift", label = "Max Length (bp)", value = 400),
+              
+              HTML('<h2 style="padding-left: 20px; margin: 5px; font-size: 20px;">4. Specify Tms tolerance</h2>'),
+              sliderInput("diff", "Max difference in TM", 1, 10, 5),
+              
+              HTML('<h2 style="padding-left: 20px; margin: 5px; font-size: 20px;">5. Adjust other filters as needed</h2>'),
+              actionButton("run_button", "Run Analysis", icon = icon("play")),
+              verbatimTextOutput("consoleOutput"),
+              
               column(
-                DT::dataTableOutput(outputId = "primer_table"), 
-                width = 12)),
-      # Second tab content
-      tabItem(tabName = "Analysis",
-              downloadButton("downloadData", "Download"))
-    ),
-    tabItem(tabName = "Selection",
-            
-            DT::dataTableOutput(outputId = "multiplex_table"),
+                withSpinner(DT::dataTableOutput(outputId = "primer_table")), 
+                width = 12),
+              withSpinner(DT::dataTableOutput(outputId = "multiplex_table")),
+              
+      )
+      # Removed the About tab
     )
   )
 )
+
+
 
 
 # Define server logic required to draw a histogram
@@ -120,11 +141,29 @@ server <- function(input, output) {
 # Heterodimer_tm = 50
 # Homodimer <- 45
 # top <- 2
-
+  consoleText <- reactiveVal("")
   
-  ## The main function - generates our primers
+  appendConsole <- function(message) {
+    consoleText(paste0(consoleText(), "\n", message))
+  }
+
+  observe({
+    input$someActionButton
+    isolate({
+      current_time <- Sys.time()
+      message <- paste("Button clicked at:", current_time)
+      appendConsole(message)
+    })
+  })
+  
+  # Render the console text
+  output$consoleOutput <- renderText({
+    consoleText()
+  })
+  
+
   mart_api <- function(primer,
-                       shift){
+                       shift, appendConsole){
 
     # We will start exploring options 800 bp away from the SNP location upstream and downstream    
     center <- 800
@@ -174,10 +213,12 @@ server <- function(input, output) {
                              shift)
     df
     
-    
+    appendConsole("Primer generated")
     print("Primer generated")
     return(df)
   }
+  
+  
   
   get_filter <- function(df, # primer
                          desired_tm,
@@ -236,6 +277,8 @@ server <- function(input, output) {
   }
   
   
+  
+  
   # This one produces the true table we used
   masterTable <- reactive(get_filter(unfiltered(),
                                      input$desired_tm,
@@ -246,8 +289,12 @@ server <- function(input, output) {
   ))
   
   # This produced the raw table that has not been filtered
-  unfiltered <- reactive(mart_api(input$primer_list,
-                                  input$shift))
+  unfiltered <- eventReactive(input$run_button, {
+    mart_api(input$primer_list, input$shift, appendConsole)
+  })
+  
+  
+  
   
   
   # This produce summary of primer generations
@@ -260,12 +307,13 @@ server <- function(input, output) {
   
   
   # This produces the result of multiplexing
-  output$multiplex_table <- renderDataTable(get_multiplex(masterTable(),
-                                                          input$Heterodimer_tm,
-                                                          input$top)
-  )
+  output$multiplex_table <- renderDataTable({
+    req(masterTable())  # Ensure that masterTable is not NULL
+    get_multiplex(masterTable(),
+                  input$Heterodimer_tm,
+                  input$top)
+  })
   
-  # output$multiplex_table <- renderDataTable(mtcars)
   
   
   # Download dataframe
