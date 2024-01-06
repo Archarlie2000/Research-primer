@@ -66,6 +66,7 @@ library(primer3)
 library(shinydashboard)
 library(shiny)
 library(shinycssloaders)
+library( shinyWidgets)
 
 source("functions.R")
 
@@ -89,7 +90,8 @@ ui <- dashboardPage(
       numericInput(inputId = "Homodimer", label = "Homodimer (°C)", value = 30),
       numericInput(inputId = "top", label = "Top", value = 2),
       numericInput(inputId = "hairpin", label = "Max Hairpin (°C)", value = 45),
-      downloadButton("downloadData", "Download")
+      div(style = "display: none", downloadButton("downloadData", "Download"))
+      
     )
   ),
   dashboardBody(
@@ -100,13 +102,13 @@ ui <- dashboardPage(
               HTML('<h2 style="padding-left: 20px; margin: 5px; font-size: 20px;">Acorn Finder is a comprehensive tool designed for rapid Allel-specific Multiplexing Primer Generation</h2>'),
               HTML('<hr style="border-top: 1px solid #ccc; margin-top: 10px; margin-bottom: 10px;">'),
               HTML('<h2 style="padding-left: 20px; margin: 5px; font-size: 20px;">1. Enter SNP IDs</h2>'),
-              div(style = "padding-left: 30px;", textInput(inputId = "primer_list", label = "", value = "rs53576, rs1815739, rs7412, rs429358, rs6152")),
+              div(style = "color: blue; gradient; padding-left: 30px;", textInput(inputId = "primer_list", label = "", value = "rs53576, rs1815739, rs7412, rs429358, rs6152")),
               # Existing Dashboard content
               HTML('<h2 style="padding-left: 20px; margin: 5px; font-size: 20px;">2. Specify Desired Tm (°C)</h2>'),
               div(style = "padding-left: 30px;", sliderInput(inputId = "desired_tm", label = "", value = 60, min = 40, max = 80)),
               
               HTML('<h2 style="padding-left: 20px; margin: 5px; font-size: 20px;">3. Specify Max Length (bp)</h2>'),
-              div(style = "padding-left: 30px;", sliderInput(inputId = "shift", label = "", value = 400, min = 100, max = 500)),
+              div(style = "padding-left: 30px;", sliderInput(inputId = "shift", label = "", value = 100, min = 100, max = 500)),
               
               HTML('<h2 style="padding-left: 20px; margin: 5px; font-size: 20px;">4. Specify Max difference in TM (°C)</h2>'),
               div(style = "padding-left: 30px;", sliderInput(inputId = "diff", label = "", value = 5, min = 0, max = 10)),
