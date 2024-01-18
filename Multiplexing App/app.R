@@ -179,7 +179,7 @@ server <- function(input, output) {
     # from that distance of 800, we will search the range from 600 to 1,000. (800+200 and 800-200)
     far <- 200
     start_distance <- 15
-    end_distance <- 30
+    end_distance <- 28
     
     # Accessing database
     print("Execute MART API")
